@@ -268,7 +268,7 @@ resource "aws_batch_job_queue" "job_queue" {
 # AWS Batch Job Definition
 #############################
 
-resource "aws_batch_job_definition" "qsrs_ocr_aiml_job" {
+resource "aws_batch_job_definition" "example_job" {
   name = var.aws_batch_def
   type = "container"
 
