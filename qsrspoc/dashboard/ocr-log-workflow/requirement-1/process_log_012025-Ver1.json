@@ -1,0 +1,772 @@
+[
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test999.pdf",
+        "datetime": "2025-01-20 14:34:15",
+        "filesize": 73027820,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "OCR process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test999.pdf",
+        "datetime": "2025-01-20 14:37:38",
+        "filesize": 73027820,
+        "pagecount": "238",
+        "status": "Ended",
+        "message": "OCR process - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test999_structured.txt",
+        "datetime": "2025-01-20 14:37:40",
+        "filesize": 1053946,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Data cleaning - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test999_structured.txt",
+        "datetime": "2025-01-20 14:37:41",
+        "filesize": 1053946,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Data cleaning - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-20 14:37:42",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Page embeddings - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-20 14:42:19",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Page embeddings - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-20 14:42:20",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "LLM output process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-20 14:42:23",
+        "filesize": 3894605,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Administrative - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-20 14:42:36",
+        "filesize": 3894605,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Administrative - Ended",
+        "num_questions": 20
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-20 14:42:37",
+        "filesize": 18087721,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Generic - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-20 14:42:56",
+        "filesize": 18087721,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Generic - Ended",
+        "num_questions": 1
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-20 14:42:57",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "LLM output process - Ended"
+    },	
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test555.pdf",
+        "datetime": "2025-01-21 11:32:15",
+        "filesize": 109541730,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "OCR process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test555.pdf",
+        "datetime": "2025-01-21 11:35:35",
+        "filesize": 109541730,
+        "pagecount": "357",
+        "status": "Ended",
+        "message": "OCR process - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test555_structured.txt",
+        "datetime": "2025-01-21 11:35:37",
+        "filesize": 1580919,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Data cleaning - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test555_structured.txt",
+        "datetime": "2025-01-21 11:36:41",
+        "filesize": 1580919,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Data cleaning - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test555_cleaned.json",
+        "datetime": "2025-01-21 11:36:43",
+        "filesize": 619922,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Page embeddings - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test555_cleaned.json",
+        "datetime": "2025-01-21 11:43:11",
+        "filesize": 619922,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Page embeddings - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test555_cleaned.json",
+        "datetime": "2025-01-21 11:43:12",
+        "filesize": 619922,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "LLM output process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test555_embeddings.json",
+        "datetime": "2025-01-21 11:43:14",
+        "filesize": 5841908,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Administrative - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test555_embeddings.json",
+        "datetime": "2025-01-21 11:44:24",
+        "filesize": 5841908,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Administrative - Ended",
+        "num_questions": 10
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test555_embeddings.json",
+        "datetime": "2025-01-21 11:44:25",
+        "filesize": 27131582,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Generic - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test555_embeddings.json",
+        "datetime": "2025-01-21 11:44:50",
+        "filesize": 27131582,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Generic - Ended",
+        "num_questions": 1
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test555_cleaned.json",
+        "datetime": "2025-01-21 11:44:51",
+        "filesize": 619922,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "LLM output process - Ended"
+    },
+	{
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test999.pdf",
+        "datetime": "2025-01-22 08:34:15",
+        "filesize": 73027820,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "OCR process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test999.pdf",
+        "datetime": "2025-01-22 08:37:38",
+        "filesize": 73027820,
+        "pagecount": "238",
+        "status": "Ended",
+        "message": "OCR process - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test999_structured.txt",
+        "datetime": "2025-01-22 08:37:40",
+        "filesize": 1053946,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Data cleaning - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test999_structured.txt",
+        "datetime": "2025-01-22 08:37:41",
+        "filesize": 1053946,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Data cleaning - Ended"
+    },
+		{
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-22 08:37:42",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Page embeddings - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-22 08:39:55",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Page embeddings - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-22 08:39:56",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "LLM output process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-22 08:39:57",
+        "filesize": 3894605,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Administrative - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-22 08:40:00",
+        "filesize": 3894605,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Administrative - Ended",
+        "num_questions": 20
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-22 08:40:01",
+        "filesize": 18087721,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Generic - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-22 08:40:03",
+        "filesize": 18087721,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Generic - Ended",
+        "num_questions": 1
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-22 08:40:04",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "LLM output process - Ended"
+    },
+	{
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test999.pdf",
+        "datetime": "2025-01-27 09:34:15",
+        "filesize": 73027820,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "OCR process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test999.pdf",
+        "datetime": "2025-01-27 09:37:38",
+        "filesize": 73027820,
+        "pagecount": "238",
+        "status": "Ended",
+        "message": "OCR process - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test999_structured.txt",
+        "datetime": "2025-01-27 09:37:40",
+        "filesize": 1053946,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Data cleaning - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test999_structured.txt",
+        "datetime": "2025-01-27 09:37:41",
+        "filesize": 1053946,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Data cleaning - Ended"
+    },
+		{
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-27 09:37:42",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Page embeddings - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-27 09:39:55",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Page embeddings - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-27 09:39:56",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "LLM output process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-27 09:39:57",
+        "filesize": 3894605,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Administrative - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-27 09:41:00",
+        "filesize": 3894605,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Administrative - Ended",
+        "num_questions": 20
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-27 09:41:01",
+        "filesize": 18087721,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Generic - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test999_embeddings.json",
+        "datetime": "2025-01-27 09:42:00",
+        "filesize": 18087721,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Generic - Ended",
+        "num_questions": 12
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test999_cleaned.json",
+        "datetime": "2025-01-27 09:42:01",
+        "filesize": 413281,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "LLM output process - Ended"
+    },
+	{
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test333.pdf",
+        "datetime": "2025-01-27 10:00:15",
+        "filesize": 36513910,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "OCR process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test333.pdf",
+        "datetime": "2025-01-27 10:02:00",
+        "filesize": 36513910,
+        "pagecount": "120",
+        "status": "Ended",
+        "message": "OCR process - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test333_structured.txt",
+        "datetime": "2025-01-27 10:02:01",
+        "filesize": 526973,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Data cleaning - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test333_structured.txt",
+        "datetime": "2025-01-27 10:03:00",
+        "filesize": 526973,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Data cleaning - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test333_cleaned.json",
+        "datetime": "2025-01-27 10:03:02",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Page embeddings - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test333_cleaned.json",
+        "datetime": "2025-01-27 10:03:50",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Page embeddings - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test333_cleaned.json",
+        "datetime": "2025-01-27 10:03:51",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "LLM output process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test333_embeddings.json",
+        "datetime": "2025-01-27 10:03:52",
+        "filesize": 1947302,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Administrative - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test333_embeddings.json",
+        "datetime": "2025-01-27 10:04:00",
+        "filesize": 1947302,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Administrative - Ended",
+        "num_questions": 20
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test333_embeddings.json",
+        "datetime": "2025-01-27 10:04:01",
+        "filesize": 9043860,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Generic - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test333_embeddings.json",
+        "datetime": "2025-01-27 10:04:03",
+        "filesize": 9043860,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Generic - Ended",
+        "num_questions": 1
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test333_cleaned.json",
+        "datetime": "2025-01-27 10:04:04",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "LLM output process - Ended"
+    },
+	{
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test111.pdf",
+        "datetime": "2025-01-21 10:00:00",
+        "filesize": 36513910,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "OCR process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test111.pdf",
+        "datetime": "2025-01-21 10:02:00",
+        "filesize": 36513910,
+        "pagecount": "238",
+        "status": "Ended",
+        "message": "OCR process - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test111_structured.txt",
+        "datetime": "2025-01-21 10:02:01",
+        "filesize": 526973,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Data cleaning - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test111_structured.txt",
+        "datetime": "2025-01-21 10:03:00",
+        "filesize": 526973,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Data cleaning - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test111_cleaned.json",
+        "datetime": "2025-01-21 10:03:02",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Page embeddings - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test111_cleaned.json",
+        "datetime": "2025-01-21 10:03:50",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Page embeddings - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test111_cleaned.json",
+        "datetime": "2025-01-21 10:03:51",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "LLM output process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test111_embeddings.json",
+        "datetime": "2025-01-21 10:03:52",
+        "filesize": 1947302,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Administrative - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test111_embeddings.json",
+        "datetime": "2025-01-21 10:04:00",
+        "filesize": 1947302,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Administrative - Ended",
+        "num_questions": 20
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test111_embeddings.json",
+        "datetime": "2025-01-21 10:04:01",
+        "filesize": 9043860,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Generic - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test111_embeddings.json",
+        "datetime": "2025-01-21 10:04:03",
+        "filesize": 9043860,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Generic - Ended",
+        "num_questions": 1
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test111_cleaned.json",
+        "datetime": "2025-01-21 10:04:04",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "LLM output process - Ended"
+    },
+	{
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test111.pdf",
+        "datetime": "2025-01-22 11:01:00",
+        "filesize": 36513910,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "OCR process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "landing/Test111.pdf",
+        "datetime": "2025-01-22 11:02:00",
+        "filesize": 36513910,
+        "pagecount": "238",
+        "status": "Ended",
+        "message": "OCR process - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test111_structured.txt",
+        "datetime": "2025-01-22 11:02:01",
+        "filesize": 526973,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Data cleaning - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "structured-data/Test111_structured.txt",
+        "datetime": "2025-01-22 11:03:00",
+        "filesize": 526973,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Data cleaning - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test111_cleaned.json",
+        "datetime": "2025-01-22 11:03:02",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Page embeddings - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test111_cleaned.json",
+        "datetime": "2025-01-22 11:03:50",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Page embeddings - Ended"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test111_cleaned.json",
+        "datetime": "2025-01-22 11:03:51",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "LLM output process - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test111_embeddings.json",
+        "datetime": "2025-01-22 11:03:52",
+        "filesize": 1947302,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Administrative - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test111_embeddings.json",
+        "datetime": "2025-01-22 11:04:00",
+        "filesize": 1947302,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Administrative - Ended",
+        "num_questions": 20
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test111_embeddings.json",
+        "datetime": "2025-01-22 11:04:01",
+        "filesize": 9043860,
+        "pagecount": "NA",
+        "status": "Started",
+        "message": "Algorithm Generic - Started"
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "ai-ml/page-embeddings/Test111_embeddings.json",
+        "datetime": "2025-01-22 11:04:03",
+        "filesize": 9043860,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "Algorithm Generic - Ended",
+        "num_questions": 1
+    },
+    {
+        "bucketname": "ahrq-qsrs-ml-poc",
+        "filepath": "cleaned-data/Test111_cleaned.json",
+        "datetime": "2025-01-22 11:04:04",
+        "filesize": 206641,
+        "pagecount": "NA",
+        "status": "Ended",
+        "message": "LLM output process - Ended"
+    }
+]
