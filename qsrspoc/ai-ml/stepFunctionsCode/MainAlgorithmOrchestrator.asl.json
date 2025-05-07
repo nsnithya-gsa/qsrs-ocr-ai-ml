@@ -1,0 +1,448 @@
+{
+  "QueryLanguage": "JSONata",
+  "StartAt": "Store S3 input to local var",
+  "States": {
+    "Store S3 input to local var": {
+      "Type": "Pass",
+      "Next": "Administrative Algorithm",
+      "Assign": {
+        "Records": "{% $states.input.Records %}"
+      }
+    },
+    "Administrative Algorithm": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Arguments": {
+        "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:administrativeAlgorithm-state",
+        "Input": {
+          "algorithm": "Administrative",
+          "Records": "{% $Records %}"
+        }
+      },
+      "Next": "Generic Algorithm"
+    },
+    "Generic Algorithm": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Arguments": {
+        "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:genericAlgorithm-state",
+        "Input": {
+          "algorithm": "Generic",
+          "Records": "{% $Records %}"
+        }
+      },
+      "Next": "Parallel"
+    },
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "HAI-COVID-19 Algorithm",
+          "States": {
+            "HAI-COVID-19 Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:covidAlgorithm-state",
+                "Input": {
+                  "algorithm": "HAI-COVID-19",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "HAI-HAP Algorithm",
+          "States": {
+            "HAI-HAP Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:haiHAPAlgorithm-state",
+                "Input": {
+                  "algorithm": "HAI-HAP",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "HAI-CDI Algorithm",
+          "States": {
+            "HAI-CDI Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:haiCDIAlgorithm-state",
+                "Input": {
+                  "algorithm": "HAI-CDI",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "HAI-CLABSI Algorithm",
+          "States": {
+            "HAI-CLABSI Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:haiCLABSIAlgorithm-state",
+                "Input": {
+                  "algorithm": "HAI-CLABSI",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "HAI-SSI Algorithm",
+          "States": {
+            "HAI-SSI Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:haiSSIAlgorithm-state",
+                "Input": {
+                  "algorithm": "HAI-SSI",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Fall Algorithm",
+          "States": {
+            "Fall Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:fallAlgorithm-state",
+                "Input": {
+                  "algorithm": "Fall",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "OOOI Algorithm Part 1",
+          "States": {
+            "OOOI Algorithm Part 1": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:OOOIPart1Algorithm-state",
+                "Input": {
+                  "algorithm": "OOOI-Part1",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "OOOI Algorithm Part 2"
+            },
+            "OOOI Algorithm Part 2": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:OOOIPart2Algorithm-state",
+                "Input": {
+                  "algorithm": "OOOI-Part2",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "OOOI Algorithm Part 3"
+            },
+            "OOOI Algorithm Part 3": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:OOOIPart3Algorithm-state",
+                "Input": {
+                  "algorithm": "OOOI-Part3",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "VTE Algorithm",
+          "States": {
+            "VTE Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:VTEAlgorithm-state",
+                "Input": {
+                  "algorithm": "VTE",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Birth-Maternal Algorithm",
+          "States": {
+            "Birth-Maternal Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:birthMaternalAlgorithm-state",
+                "Input": {
+                  "algorithm": "Birth-Maternal",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Blood Algorithm",
+          "States": {
+            "Blood Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:bloodAlgorithm-state",
+                "Input": {
+                  "algorithm": "Blood",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "Medication Heparin Algorithm"
+            },
+            "Medication Heparin Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:medicationHeparinAlgorithm-state",
+                "Input": {
+                  "algorithm": "Medication-Heparin",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "Medication Hypoglycemic Algorithm"
+            },
+            "Medication Hypoglycemic Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:medicationHypoglycemicAlgorithm-state",
+                "Input": {
+                  "algorithm": "Medication-Hypoglycemic",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "Medication Opioid Algorithm Part 1"
+            },
+            "Medication Opioid Algorithm Part 1": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:medicationOpioidPart1Algorithm-state",
+                "Input": {
+                  "algorithm": "Medication-Opioid-Part1",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "Medication Opioid Algorithm Part 2"
+            },
+            "Medication Opioid Algorithm Part 2": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:medicationOpioidPart2Algorithm-state",
+                "Input": {
+                  "algorithm": "Medication-Opioid-Part2",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "Medication Anaphylaxis Overdose Algorithm"
+            },
+            "Medication Anaphylaxis Overdose Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:medicationAnaphylaxisOverdoseAlgorithm-state",
+                "Input": {
+                  "algorithm": "Medication-Anaphylaxis-Overdose",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "Medication Warfarin Algorithm"
+            },
+            "Medication Warfarin Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:medicationWarfarinAlgorithm-state",
+                "Input": {
+                  "algorithm": "Medication-Warfarin",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "Medication LMWH Algorithm"
+            },
+            "Medication LMWH Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:medicationLMWHAlgorithm-state",
+                "Input": {
+                  "algorithm": "Medication-LMWH",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Device Algorithm",
+          "States": {
+            "Device Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:deviceAlgorithm-state",
+                "Input": {
+                  "algorithm": "Device",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "HAI-UTI Algorithm",
+          "States": {
+            "HAI-UTI Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:haiUTIAlgorithm-state",
+                "Input": {
+                  "algorithm": "HAI-UTI",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "Next": "HAI-CAUTI Algorithm"
+            },
+            "HAI-CAUTI Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:haiCAUTIAlgorithm-state",
+                "Input": {
+                  "algorithm": "HAI-CAUTI",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "HAI-Other Algorithm",
+          "States": {
+            "HAI-Other Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:haiOtherAlgorithm-state",
+                "Input": {
+                  "algorithm": "HAI-Other",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Pressure Injury Algorithm",
+          "States": {
+            "Pressure Injury Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:pressureInjuryAlgorithm-state",
+                "Input": {
+                  "algorithm": "Pressure Injury",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Surgery Algorithm",
+          "States": {
+            "Surgery Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:surgeryAlgorithm-state",
+                "Input": {
+                  "algorithm": "Surgery",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Birth-Neonatal Algorithm",
+          "States": {
+            "Birth-Neonatal Algorithm": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Arguments": {
+                "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:birthNeonatalAlgorithm-state",
+                "Input": {
+                  "algorithm": "Birth-Neonatal",
+                  "Records": "{% $Records %}"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Comment": "Must edit code directly to add extra branches to this",
+      "Next": "Exit Algorithm"
+    },
+    "Exit Algorithm": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Arguments": {
+        "StateMachineArn": "arn:aws:states:us-east-1:864981749938:stateMachine:exitAlgorithm-state",
+        "Input": {
+          "algorithm": "Exit",
+          "Records": "{% $Records %}"
+        }
+      },
+      "End": true
+    }
+  }
+}

@@ -1,0 +1,899 @@
+{
+  "StartAt": "Assign Vars",
+  "QueryLanguage": "JSONata",
+  "States": {
+    "Assign Vars": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:assignVarsStepFunction:$LATEST",
+        "Payload": "{% $states.input %}"
+      },
+      "Assign": {
+        "prompts": "{% $states.result.Payload.prompts %}",
+        "embeddings_key": "{% $states.result.Payload.embeddings_key %}",
+        "all_page_text_file": "{% $states.result.Payload.all_page_text_file %}",
+        "passed_data": "{% $states.result.Payload.passed_data %}",
+        "algorithm": "{% $states.result.Payload.algorithm %}",
+        "config_questions_key": "medicationWarfarinAlgorithmQuestions",
+        "MED_EVENT": "{% false %}",
+        "WARFARIN": "{% false %}",
+        "INR": "{% false %}",
+        "VitK": "{% false %}",
+        "RFVIIa": "{% false %}",
+        "PCC": "{% false %}",
+        "Q13_response": "",
+        "Q14_response": "",
+        "Q15_response": "",
+        "R2_response": "",
+        "Q16_response": "",
+        "Q42_response": "",
+        "Q43_response": "",
+        "Q44_response": "",
+        "Q45_response": "",
+        "Q46_response": "",
+        "Q47_response": "",
+        "R6_response": "",
+        "Q48_response": "",
+        "Q49_response": "",
+        "Q51a_response": "",
+        "Q51b_response": "",
+        "RX_response": ""
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Extract Data Pass"
+    },
+    "Extract Data Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "MED_EVENT": "{% $passed_data.MED_EVENT %}",
+        "ANTICOAGULANT": "{% $passed_data.ANTICOAGULANT %}",
+        "BloodTransfusion_FFP": "{% $passed_data.BloodTransfusion_FFP %}",
+        "BloodTransfusion_Whole": "{% $passed_data.BloodTransfusion_Whole %}",
+        "BloodTransfusion_RBC": "{% $passed_data.BloodTransfusion_RBC %}",
+        "OR_procedure": "{% $passed_data.OR_procedure %}",
+        "discharge_status": "{% $passed_data.DischargeStatus %}"
+      },
+      "Next": "Anticoagulant Check"
+    },
+    "Anticoagulant Check": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q13",
+          "Condition": "{% $ANTICOAGULANT %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q13": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q13 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q13_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q13 Choice"
+    },
+    "Q13 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q13 Pass",
+          "Condition": "{% $Q13_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q13 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "WARFARIN": "{% true %}"
+      },
+      "Next": "Q14"
+    },
+    "Q14": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q14 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q14_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q14 Choice"
+    },
+    "Q14 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q14 Pass",
+          "Condition": "{% $Q14_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q15"
+    },
+    "Q14 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "INR": "{% true %}"
+      },
+      "Next": "Q42"
+    },
+    "Q15": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q15 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q15"
+        }
+      },
+      "Assign": {
+        "Q15_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q15 VitK Choice"
+    },
+    "Q15 VitK Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q15 Pass VitK",
+          "Condition": "{% $contains($Q15_response.Answer, 'vitamin k') %}"
+        }
+      ],
+      "Default": "Q15 RFVIIa Choice"
+    },
+    "Q15 Pass PCC": {
+      "Type": "Pass",
+      "Assign": {
+        "PCC": "{% true %}"
+      },
+      "Next": "Q42"
+    },
+    "Q15 Pass RFVIIa": {
+      "Type": "Pass",
+      "Assign": {
+        "RFVIIa": "{% true %}"
+      },
+      "Next": "Q15 PCC Choice"
+    },
+    "Q15 PCC Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q15 Pass PCC",
+          "Condition": "{% $contains($Q15_response.Answer, 'prothrombin complex concentrate') %}"
+        },
+        {
+          "Next": "R2 Choice",
+          "Condition": "{% $Q15_response.Answer = \"can't tell\" or $Q15_response.Answer = 'none' %}"
+        }
+      ],
+      "Default": "Q42"
+    },
+    "Q15 Pass VitK": {
+      "Type": "Pass",
+      "Assign": {
+        "VitK": "{% true %}"
+      },
+      "Next": "Q15 RFVIIa Choice"
+    },
+    "Q15 RFVIIa Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q15 Pass RFVIIa",
+          "Condition": "{% $contains($Q15_response.Answer, 'recombinant factor viia') %}"
+        }
+      ],
+      "Default": "Q15 PCC Choice"
+    },
+    "R2 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q16",
+          "Condition": "{% $BloodTransfusion_FFP or (($BloodTransfusion_Whole or $BloodTransfusion_RBC) and $not($OR_procedure)) %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q16": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q16 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q16_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q16 Choice"
+    },
+    "Q16 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q42",
+          "Condition": "{% $Q16_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q42": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q42 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q42_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q42 Choice"
+    },
+    "Q42 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q43",
+          "Condition": "{% $Q42_response.Answer = 'no' %}"
+        }
+      ],
+      "Default": "Q46"
+    },
+    "Q43": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q43 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q43_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q43 Choice"
+    },
+    "Q43 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q44",
+          "Condition": "{% $Q43_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q46"
+    },
+    "Q44": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q44 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q44"
+        }
+      },
+      "Assign": {
+        "Q44_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q44 Choice"
+    },
+    "Q44 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q46",
+          "Condition": "{% $Q44_response.Answer = 'none' or $Q44_response.Answer = \"can't tell\" %}"
+        }
+      ],
+      "Default": "Q45"
+    },
+    "Q45": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q45 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q45_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q45 Choice"
+    },
+    "Q45 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q45 Pass",
+          "Condition": "{% $Q45_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q46"
+    },
+    "Q45 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "MED_EVENT": "{% true %}"
+      },
+      "Next": "Q46"
+    },
+    "Q46": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q46 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q46_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q46 Choice"
+    },
+    "Q46 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q47",
+          "Condition": "{% $Q46_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "R6 Choice"
+    },
+    "Q47": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q47 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q47_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q47 Choice"
+    },
+    "Q47 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q47 Pass",
+          "Condition": "{% $Q47_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "R6 Choice"
+    },
+    "Q47 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "MED_EVENT": "{% true %}"
+      },
+      "Next": "R6 Choice"
+    },
+    "R6 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q48",
+          "Condition": "{% $discharge_status = 'died' %}"
+        }
+      ],
+      "Default": "Q49"
+    },
+    "Q48": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q48 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q48_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q48 Choice"
+    },
+    "Q48 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q48 Pass",
+          "Condition": "{% $Q48_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q49"
+    },
+    "Q48 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "MED_EVENT": "{% true %}"
+      },
+      "Next": "Q49"
+    },
+    "Q49": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q49 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q49_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q49 Choice"
+    },
+    "Q49 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q51a",
+          "Condition": "{% $Q49_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q51a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q51a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q51a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Q51b"
+    },
+    "Q51b": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q51b %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q51b_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Hemoglobin Drop Check"
+    },
+    "Hemoglobin Drop Check": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Hemoglobin Drop Pass",
+          "Condition": "{% $number($Q51a_response.Answer) - $number($Q51b_response.Answer) >= 5 %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Hemoglobin Drop Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "MED_EVENT": "{% true %}"
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set New Data to Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "passed_data": "{% $merge([$passed_data, {\"MED_EVENT\": $MED_EVENT}]) %}"
+      },
+      "Next": "Collect and Upload"
+    },
+    "Collect and Upload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:collectAndUpload:$LATEST",
+        "Payload": {
+          "MED_EVENT": "{% $MED_EVENT %}",
+          "INR": "{% $INR %}",
+          "VitK": "{% $VitK %}",
+          "RFVIIa": "{% $RFVIIa %}",
+          "PCC": "{% $PCC %}",
+          "Q13": "{% $Q13_response %}",
+          "Q14": "{% $Q14_response %}",
+          "Q15": "{% $Q15_response %}",
+          "Q42": "{% $Q42_response %}",
+          "Q43": "{% $Q43_response %}",
+          "Q44": "{% $Q44_response %}",
+          "Q45": "{% $Q45_response %}",
+          "Q46": "{% $Q46_response %}",
+          "Q47": "{% $Q47_response %}",
+          "R6": "{% $R6_response %}",
+          "Q48": "{% $Q48_response %}",
+          "Q49": "{% $Q49_response %}",
+          "Q51a": "{% $Q51a_response %}",
+          "Q51b": "{% $Q51b_response %}",
+          "RX": "{% $RX_response %}",
+          "passed_data": "{% $passed_data %}",
+          "algorithm": "Medication-Warfarin",
+          "page-embeddings-file": "{% $embeddings_key %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "End": true
+    },
+    "Fail State": {
+      "Type": "Fail",
+      "Error": "$['Error']",
+      "Cause": "$['Cause']"
+    }
+  }
+}

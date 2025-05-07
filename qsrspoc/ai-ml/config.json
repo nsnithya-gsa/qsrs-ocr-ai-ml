@@ -1,0 +1,853 @@
+{
+    "cleaned-data-folder": "cleaned-data/",
+    "embeddings-folder": "ai-ml/page-embeddings/",
+    "llm-output-folder": "ai-ml/llm-output/",
+    "passed-step-function-data-folder": "ai-ml/passed-step-function-data/",
+
+    "keep-key-value-text": false,
+
+    "sagemaker-endpoint": "biobert-endpoint-custom-v4",
+    "bucket": "ahrq-qsrs-ml-poc",
+    "default-file": "4928968_Redacted_cleaned.json",
+    "default-algorithm": "HAI-UTI",
+    "main-algorithm-orchestrator-SF-arn": "arn:aws:states:us-east-1:864981749938:stateMachine:MainAlgorithmorchestrator",
+
+    "structured-extension": "structured.txt",
+    "cleaned-extension": "cleaned.json",
+    "embeddings-extension": "embeddings.json",
+    "llm-output-extension": "final_output.json",
+    "passed-data-extension": "passed_data.json",
+
+    "delimiter": "~|~",
+    "model-id": "us.meta.llama3-2-90b-instruct-v1:0",
+    "context-replace": "{context}",
+
+    "embeddings_send_to_batch": "1",
+    "batch_methodname": "process_file_embeddings_job",
+    "batch_jobname": "qsrs-ocr-pe-awsbatch-job",
+    "batch_jobqueue": "qsrs-ocr-job-pe-queue-awsbatch",
+    "batch_jobdefinition": "qsrs-ocr-jobdefinition-pe-awsbatch",
+    "batch_language": "python",
+    "batch_pythoncodefile": "awsbatch_page_embeddings_job.py",
+
+
+    "administrativeAlgorithmQuestions": {
+        "Race-word-replace": "{race-list}",
+        "Priority type of Admission-word-replace": "{priority-type-list}",
+        "Patient Discharge Status-word-replace": "{discharge-status-list}",
+        "Point of origin for Admission-word-replace": "{origin-list}",
+        "Type of Primary Payer-word-replace": "{payer-list}",
+        "Specific Cohorts of Charts-word-replace": "{cohort-list}",
+        
+        "Race-pretty": "What is the patient's race?",
+        "Priority type of Admission-pretty": "Which priority type of admission applies to this hospitalization event?",
+        "Patient Discharge Status-pretty": "What was the patient's discharge status?",
+        "Point of origin for Admission-pretty": "What was the patient's point of origin for admission?",
+        "Type of Primary Payer-pretty": "Who was the primary payer?",
+        "Specific Cohorts of Charts-pretty": "Which cohorts of charts does this hospitalization event belong to?",
+
+        "Race-list": [
+            "American Indian or Alaska Native",
+            "Asian",
+            "Black or African American",
+            "Native Hawaiian or other Pacific Islander",
+            "White",
+            "More than one race"
+        ],
+        "Priority type of Admission-list": [
+            "Emergency",
+            "Urgent",
+            "Elective",
+            "Newborn",
+            "Trauma Activation"
+        ],
+        "Patient Discharge Status-list": [
+            "Home or self care",
+            "Acute care facility",
+            "Hospice facility",
+            "Nursing facility",
+            "Left against medical advice",
+            "Died",
+            "other facility"
+        ],
+        "Point of origin for Admission-list": [
+            "Non-healthcare facility",
+            "Transfer from a hospital",
+            "Transfer from a skilled nursing facility or intermediate care facility",
+            "Court/law enforcement",
+            "Transfer from a distinct unit of a hospital to another distinct unit in the same hospital",
+            "Newborn, born inside this hospital",
+            "Newborn, born outside the hospital",
+            "Transfer from a Designated Disaster Alternate Care Site"
+        ],
+        "Type of Primary Payer-list": [
+            "Private insurance",
+            "Medicare: Fee-for service",
+            "Medicare: Advantage",
+            "Medicare: Can't tell",
+            "Medicaid",
+            "Uninsured",
+            "other"
+        ],
+        "Specific Cohorts of Charts-list": [
+            "Acute Myocardial infarction (AMI) patients",
+            "Congenitive Heart Failure (CHF) patients",
+            "Surgical Care Improvement Project (SCIP)",
+            "Emergency Department (ED)",
+            "Immunization Review (IMM)",
+            "Critical Access Hospitals (CAH)",
+            "Medicare Critical Access Hospitals",
+            "Medicare Rural IPPS Hospitals",
+            "Long-term Acute Care Facility (LTAC)"
+        ]
+    },
+    "birthMaternalQuestions": {
+        "Q1-word-replace": "{outcome-list}",
+        "Q2-word-replace": "{injury-location-list}",
+        "Q3-word-replace": "{delivery-type-list}",
+        "Q10-word-replace": "{induction-conditions-list}",
+        "Q11-word-replace": "{instrumentation-list}",
+
+        "Q1-pretty": "Which of the following maternal outcomes occurred during the stay?",
+        "Q2-pretty": "Where was the injury sustained?",
+        "Q3-pretty": "What type of delivery did the patient have?",
+        "Q10-pretty": "Which of the following conditions were present prior to induction?",
+        "Q11-pretty": "During the delivery, which of the following instrumentation was used?",
+
+        "Q1-list": [
+            "Chorioamnionitis",
+            "Endometritis",
+            "Hemorrhage requiring transfusion",
+            "Eclampsia (pre-eclampsia plus seizures or convulsions)",
+            "Third- or fourth-degree perineal laceration",
+            "Injury to other body part or organ",
+            "Other, please specify"
+        ],
+        "Q2-list": [
+            "Uterus",
+            "Ureter",
+            "Bladder",
+            "Bowel",
+            "Other, please specify"
+        ],
+        "Q3-list": [
+            "Cesarean section",
+            "Vaginal delivery",
+            "Attempted vaginal followed by Cesarean section"
+        ],
+        "Q10-list": [
+            "Diabetes mellitus",
+            "Premature rupture of the membranes",
+            "Pregnancy induced hypertension, including mild, moderate, or severe pre-eclampsia, or eclampsia",
+            "Intrauterine growth retardation (IUGR) or small for gestational age (SGA)",
+            "Cardiac disease",
+            "Post maturity (41 or more weeks of pregnancy completed)",
+            "Isoimmunization (e.g. Rh disease)",
+            "Chorioamnionitis",
+            "Abruptio placentae"
+        ],
+        "Q11-list": [
+            "Vacuum",
+            "Forceps",
+            "Vacuum followed by forceps"
+        ]
+    },
+    "birthNeonatalAlgorithmQuestions": {
+        "Q3-word-replace": "{outcomes-list}",
+        "Q9-word-replace": "{delivery-type-list}",
+        "Q10-word-replace": "{instrumentation-list}",
+
+        "Q3-pretty": "Which of these diagnoses or outcomes did the neonate sustain?",
+        "Q9-pretty": "What type of delivery did the patient have, according to documentation?",
+        "Q10-pretty": "During the delivery, which of the following instrumentation was used?",
+
+        "Q3-list": [
+            "Anoxic or hypoxic-ischemic encephalopathy",
+            "Infection",
+            "Subdural or cerebral hemorrhage",
+            "Injury to brachial plexus, Erb's paralysis, or Klumpke's paralysis",
+            "Abduction of a neonate",
+            "Massive aspiration syndrome or meconium aspiration syndrome",
+            "Severe hyperbilirubinemia (bilirubin > 30 mg/dl)",
+            "Seizure",
+            "Other birth injury"
+        ],
+        "Q9-list": [
+            "Vaginal delivery",
+            "Attempted vaginal delivery followed by Cesarean section",
+            "Cesarean section"
+        ],
+        "Q10-list": [
+            "Vacuum",
+            "Forceps",
+            "Vacuum followed by forceps"
+        ]
+    },
+    "deviceAlgorithmQuestions": {
+        "Q1-word-replace": "{device-list}",
+        "Q2-word-replace": "{hit-device-list}",
+        "Q3-word-replace": "{error-reason-list}",
+
+        "Q1-pretty": "What type of device was involved in the event?",
+        "Q2-pretty": "What type of HIT device?",
+        "Q3-pretty": "In what was was the medical device involved?",
+
+        "Q1-list": [
+            "Implantable device",
+            "Medical equipment",
+            "Medical/surgical supply, including disposable product",
+            "HIT device"
+        ],
+        "Q2-list": [
+            "EHR or component of EHR",
+            "Human interface device",
+            "Radiology/diagnostic imaging system, including PACS",
+            "other, please specify"
+        ],
+        "Q3-list": [
+            "Device defect or failure",
+            "Use error",
+            "Combination or interaction of device defect and use error"
+        ]
+    },
+    "haiUTIAlgorithmQuestions": {
+        "Q1-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q1-list": [
+            "Fever (> 38 degrees C)",
+            "Hypothermia (< 36 degrees C)",
+            "Apnea",
+            "Bradycardia",
+            "Lethargy",
+            "Vomiting"
+        ],
+        "Q1-word-replace": "{symptom-list}",
+
+        "Q2-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q2-list" : [
+            "Fever (> 38 degrees C)",
+            "Supranubic tenderness",
+            "Costovertebral angle pain or tenderness",
+            "Dysuria",
+            "Urgency",
+            "Frequency"
+        ],
+        "Q2-word-replace": "{symptom-list}",
+
+        "Q3-pretty": "Did the symptoms appear within 3 days before or after the positive urine culture?"
+
+    },
+    "fallAlgorithmQuestions": {
+        "Q2-pretty": "Which of the following was the most serious injury sustained as the result of any fall?",
+        "Q2-list": [
+            "Intracranial Injury (e.g. subdural hematoma",
+            "Fracture",
+            "Disclocation",
+            "Laceration requiring sutures",
+            "other injury (e.g., skin tear, avulsion, hematoma, bruising), please specify:"
+        ],
+        "Q2-word-replace": "{resulting-injuries-list}"
+    },
+    "haiCAUTIAlgorithmQuestions": {
+        "Q1-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q1-list": [
+            "Fever (> 38 degrees C)",
+            "Supranubic tenderness",
+            "Costovertebral angle pain or tenderness"
+        ],
+        "Q1-word-replace": "{systemic-findings-list}",
+
+        "Q2-pretty": "Which, if any, were noted after the catheter was removed or within 1 day after its removal?",
+        "Q2-list" : [
+            "Urgency",
+            "Frequency",
+            "Dysuria"
+        ],
+        "Q2-word-replace": "{symptoms-list}"
+    },
+    "haiHAPAlgorithmQuestions": {
+        "Q1-pretty": "Which of the following chest radiograph findings, if any, were noted in the medical record?",
+        "Q1-list": [
+            "Infiltrate",
+            "Consolidation",
+            "Cavitation"
+        ],
+        "Q1-word-replace": "{radiograph-findings-list}",
+
+        "Q2-pretty": "Which of the following chest radiograph findings, if any, were noted in the medical record?",
+        "Q2-list": [
+            "Infiltrate",
+            "Consolidation",
+            "Cavitation",
+            "Pneumatocele"
+        ],
+        "Q2-word-replace": "{radiograph-findings-list}",
+
+        "Q5-pretty": "Which of the following systemic findings, if any, were noted in the medical record?",
+        "Q5-list": [
+            "Fever (> 38 degrees C)",
+            "Leukopenia (<4000 WBC/mm3) or Leukocytosis (>12,000 WBC/mm3)",
+            "Decline in mental status"
+        ],
+        "Q5-word-replace": "{systemic-findings-list}",
+
+        "Q6-pretty": "Which of the following systemic findings, if any, were noted in the medical record?",
+        "Q6-list": [
+            "Fever (> 38 degrees C)",
+            "Leukopenia (<4000 WBC/mm3) or Leukocytosis (>12,000 WBC/mm3)"
+        ],
+        "Q6-word-replace": "{systemic-findings-list}",
+
+        "Q8-pretty": "Which of the following pulmonary findings, if any, were noted in the medical record?",
+        "Q8-list": [
+            "New onset of purulent sputum, change in character or quantity of sputum, or increased respiratory secretions",
+            "New onset or worsening cough, or dyspnea, or tachypnea",
+            "Rales (or crackles) or bronchial breath sounds",
+            "oxygen saturation that decreases following admission and reaches less than 94 percent"
+        ],
+        "Q8-word-replace": "{pulmonary-findings-list}",
+
+        "Q9-pretty": "Which of the following, if any, happened prior to the onset of pneumonia?",
+        "Q9-list": [
+            "Major surgical procedure",
+            "Ventilation with tracheostomy or endotracheal tube",
+            "Aspiration"
+        ],
+        "Q9-word-replace": "{prior-event-list}"
+
+    },
+    "haiCLABSIAlgorithmQuestions": {
+        "Q6-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q6-list": [
+            "Fever (> 38 degrees C)",
+            "Chills",
+            "Hypotension",
+            "Apnea",
+            "Bradycardia"
+        ],
+        "Q6-word-replace": "{symptom-list}",
+
+        "Q7-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q7-list" : [
+            "Fever (> 38 degrees C)",
+            "Chills",
+            "Hypotension"
+        ],
+        "Q7-word-replace": "{symptom-list}"
+
+    },
+    "haiSSIAlgorithmQuestions": {
+        "EQ2-pretty": "Which, if any, of the following infections did the patient experience?",
+        "EQ2-list": [
+            "Skin and subcutaneous tissue infection without deeper involvement",
+            "Infection of deep soft tissue",
+            "Infection without mention of superficiality",
+            "Infection within organ space"
+        ],
+        "EQ2-word-replace": "{infection-list}",
+
+        "Q1-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q1-list": [
+            "Superficial incisional SSI (surgical site infection)",
+            "Purulent drainage from a superficial incision",
+            "organisms isolated from a culture of fluid or tissue from a superficial incision and / or subcutaneous tissue around operative site",
+            "An incision was opened or drained"
+        ],
+        "Q1-word-replace": "{superficial-incision-list}",
+
+        "Q2-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q2-list": [
+            "Deep incisional SSI (surgical site infection)",
+            "Purulent drainage from a deep infection",
+            "Abscess or other evidence of infection found on physical exam, during an invasive procedure, pathology report, or imaging test",
+            "A deep incision that dehisces, is opened, or is percutaneously aspirated"
+        ],
+        "Q2-word-replace": "{deep-tissue-list}",
+
+        "Q3-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q3-list": [
+            "SSI (surgical site infection), without mention of superficial or deep",
+            "Purulent drainage from the incision without mention of superficial or deep",
+            "organisms isolated from a culture of fluid or tissue from an incision without mention of superficial or deep",
+            "Incision, without mention of superficial or deep, that is opened"
+        ],
+        "Q3-word-replace": "{non-superficiality-list}",
+
+        "Q4-pretty": "Which, if any, of the following were noted in the medical record?",
+        "Q4-list": [
+            "organ or organ space SSI (surgical site infection)",
+            "Purulent drainage from a drain that is placed into an organ or organ space",
+            "Abscess or other evidence of infection found on physical exam, during an invasive procedure, pathology report, or imaging test",
+            "organisms isolated from a culture of fluid or tissue in an organ space"
+        ],
+        "Q4-word-replace": "{organ-space-list}",
+
+        "Q7-pretty": "Which of the following signs or symptoms were found?",
+        "Q7-list": [
+           "Pain or tenderness",
+            "Localized swelling",
+            "Redness or heat"
+        ],
+        "Q7-word-replace": "{local-symptoms-list}",
+
+        "Q10-pretty": "Which, if any, of the following signs or symptoms were found?",
+        "Q10-list": [
+            "Fever (> 38 degrees C)",
+            "Localized pain or tenderness"
+        ],
+        "Q10-word-replace": "{general-symptoms-list}",
+
+        "Q13-pretty": "Which of the following signs or symptoms were found?",
+        "Q13-list": [
+            "Fever (> 38 degrees C)",
+            "Pain or tenderness",
+            "Localized swelling",
+            "Redness or heat"
+        ],
+        "Q13-word-replace": "{general-symptoms-list}"
+
+    },
+    "VTEAlgorithmQuestions": {
+        "EQ5-pretty": "What type of prophylaxis was ordered?",
+        "EQ5-list": [
+            "Anticoagulants (including patients on therapeutic anticoagulants)",
+            "Physical or Mechanical prophylaxis (e.g. pneumatic compression devices)"
+        ],
+        "EQ5-word-replace": "{prophylaxis-list}",
+
+        "EQ7-pretty": "Which of the following were noted during the stay",
+        "EQ7-list": [
+            "Pulmonary Embolism (PE)",
+            "Deep Vein Thrombosis (DVT)"
+        ],
+        "EQ7-word-replace": "{type-list}",
+
+        "Q2-pretty": "Which diagnostic test confirmed the deep vein thrombosis (DVT)?",
+        "Q2-list": [
+            "Venous compression ultrasound or duplex ultrasound",
+            "Magnetic resonance imaging (MRI)",
+            "Computed tomography(CT) with contrast medium",
+            "Venography"
+        ],
+        "Q2-word-replace": "{diagnostic-list}",
+
+        "Q3-pretty": "Which of the following signs or symptoms were documented more than 48 hours after arrival/admission or anytime after operating room (oR) procedure: {symptom-list}",
+        "Q3-list": [
+            "Pain",
+            "Tenderness",
+            "Swelling",
+            "Redness"
+        ],
+        "Q3-word-replace": "{symptom-list}",
+
+        "Q4-pretty": "What was the location of the deep vein thrombosis (DVT)",
+        "Q4-list": [
+            "Lower extremity, proximal",
+            "Lower extremity, distal",
+            "Upper extremity or upper thorax"
+        ],
+        "Q4-word-replace": "{location-list}",
+
+        "Q5a-pretty": "Which diagnostic test confirmed the pulmonary embolism (PE)?",
+        "Q5a-list": [
+            "Computed tomography (CT) angiography of pulmonary arteries with contrast",
+            "High probability nuclear medicine V/Q scan",
+            "Magnetic Resonance Imaging (MRI) of pulmonary arteries",
+            "Pulmonary angiography",
+            "Post-mortem exam finding that PE likely contributed to death"
+        ],
+        "Q5a-word-replace": "{test-list}",
+
+        "Q5b-pretty": "Which diagnostic test confirmed the pulmonary embolism (PE)?",
+        "Q5b-list": [
+            "Computed tomography (CT) angiography of pulmonary arteries with contrast",
+            "High probability nuclear medicine V/Q scan",
+            "Magnetic Resonance Imaging (MRI) of pulmonary arteries",
+            "Pulmonary angiography",
+            "Post-mortem exam finding that PE likely contributed to death",
+            "Moderate probability V/Q scan"
+        ],
+        "Q5b-word-replace": "{test-list}",
+
+        "Q6-pretty": "Which of the following signs or symptoms were documented more than 48 hours after arrival/admission or anytime after operating room (oR) procedure?",
+        "Q6-list": [
+            "Shortness of breath",
+            "Pleuritic chest pain",
+            "Hemoptysis",
+            "oxygen desaturation",
+            "Death"
+        ],
+        "Q6-word-replace": "{symptom-list}",
+
+        "Q7-pretty": "When did the patient develop the venous thromboembolism (VTE)?",
+        "Q7-list": [
+            "Before any or all oR procedures",
+            "After any oR procedure"
+        ],
+        "Q7-word-replace": "{timing-list}"
+    },
+    "medicationHeparinAlgorithmQuestions": {
+        "Q34-pretty": "In which of the following sites did bleeding develop?",
+        "Q34-list": [
+            "Gastrointestinal bleeding",
+            "Genitourinary bleeding",
+            "Hematoma",
+            "Intracranial bleeding",
+            "Other type(s) of bleeding"
+        ],
+        "Q34-word-replace": "{bleeding-site-list}"
+    },
+    "medicationWarfarinAlgorithmQuestions": {
+        "Q15-pretty": "Which,if any,of the following did the patient receive after any dose of warfarin?",
+        "Q15-list": [
+            "Vitamin K",
+            "Recombinant factor VIIa",
+            "Prothrombin complex concentrate"
+        ],
+        "Q15-word-replace": "{post-warfarin-treatments}",
+
+        "Q44-pretty": "Did bleeding develop at any of the following sites?",
+        "Q44-list": [
+            "Gastrointestinal bleeding",
+            "Genitourinary bleeding",
+            "Pulmonary bleeding",
+            "Hematoma",
+            "Intracranial bleeding",
+            "Other type(s) of bleeding"
+        ],
+        "Q44-word-replace": "{post-treatment-bleeding-site-list}"
+    },
+    "medicationLMWHAlgorithmQuestions": {
+        "Q24-pretty": "Which,if any,of the following did the patient receive after any dose of low molecular weight heparin (LMWH)?",
+        "Q24-list": [
+            "Desmopressin acetate",
+            "Recombinant factor VIIa",
+            "Antifibrinolytic therapy (e.g., aminocaproic acid; tranexamic acid)",
+            "Protamine"
+        ],
+        "Q24-word-replace": "{post-lmwh-treatment}",
+
+        "Q54-pretty": "Did bleeding develop at any of the following sites?",
+        "Q54-list": [
+            "Gastrointestinal bleeding",
+            "Genitourinary bleeding",
+            "Pulmonary bleeding",
+            "Hematoma",
+            "Intracranial bleeding",
+            "Other type(s) of bleeding"
+        ],
+        "Q54-word-replace": "{bleeding-development-sites}"
+    },
+    "medicationHypoglycemicAlgorithmQuestions": {
+        "Q63-pretty": "On any day that blood glucose was less than 50 mg/dl (other than the first day), which of the following were noted?",
+        "Q63-list": [
+            "Profuse sweating",
+            "Confusion",
+            "Seizure",
+            "Coma or loss of consciousness",
+            "Cardiac arrest/emergency measures to sustain life/call for rapid response team",
+            "Death"
+        ],
+        "Q63-word-replace": "{low-blood-glucose-symptom-list}",
+
+        "Q63c-pretty": "Which medication was the patient administered after the first 24 hours of admission (on the same day as > 50mg/dl and less-than-or-equal-to 70mg/dl)?",
+        "Q63c-list": [
+            "D50",
+            "D10",
+            "Glucagon"
+        ],
+        "Q63c-word-replace": "{med-list}",
+
+        "Q63d-pretty": "On any day that blood glucose was > 50mg/dl and less-than-or-equal-to 70mg/dl after the first 24 hours of admission and administration of either D50,D10,or glucagon which of the following were noted?",
+        "Q63d-list": [
+            "Profuse sweating",
+            "Confusion",
+            "Seizure",
+            "Coma or loss of consiousness",
+            "Cardiac arrest/emergency measures to sustain life/call for rapid response team",
+            "Death"
+        ],
+        "Q63d-word-replace": "{symptom-list}"
+    },
+    "medicationOpioidPart2AlgorithmQuestions": {
+        "Q77-pretty": "Which of the following opioids were prescribed?",
+        "Q77-list": [
+            "Hydrocodone",
+            "Oxycodone",
+            "Oxymorphone",
+            "Morphine",
+            "Codeine",
+            "Fentanyl",
+            "Tramadol",
+            "Other, please specify"
+        ],
+        "Q77-word-replace": "{opioid-list}"
+    },
+    "medicationAnaphylaxisOverdoseAlgorithmQuestions": {
+        "Q3-pretty": "Within 2 hours of medication administration, which, if any of the following did the patient experience?",
+        "Q3-list": [
+            "Anaphylaxis documented by provider",
+            "Hives, welts, or wheals",
+            "Wheezing, difficculty breathing, or change in respiratory rate",
+            "Drop in blood pressure",
+            "Administration of epinephrine, diphenydramine or steroids"
+        ],
+        "Q3-word-replace": "{adverse-drug-reaction-list}"
+    },
+    "bloodAlgorithmQuestions": {
+        "EQR1-pretty": "Were any secondary diagnosis codes present at discharge also present in this list of transfusion reaction codes?",
+        "EQR1-list": [
+            "T80.51XA",
+            "T80.311A",
+            "T80.410A",
+            "T80.A9XA",
+            "T80.30XA",
+            "E87.71",
+            "T80.411A",
+            "T80.A10A",
+            "T80.319A",
+            "T80.40XA",
+            "J95.84",
+            "T80.A11A",
+            "T80.39X",
+            "T80.419A",
+            "T80.A0XA",
+            "T80.22XA",
+            "T80.310A",
+            "T80.49XA",
+            "T80.A19XA"
+        ],
+        "EQR1-word-replace": "{dx-code-list}",
+        
+        "Q1-extra-context": "Here are some synonyms for relevant blood products:\nRed blood cells: ('erythrocytes', 'packed cells', 'red cell concentrate', 'washed red blood cells', 'citrated red blood cells')\nPlatelets ('thrombocytes')\nPlasma ('fresh frozen plasma')\nHematopoietic stem cells ('stem or progenitor cells' obtained from marrow or peripheral blood of either the patient or donor)\nLymphocytes ('donor lymphocyte infusion', 'donor leukocytes', 'buffy coat infusion')\nGranulocytes ('polymorphonuclear leukocytes', 'PMN, PML, PMNL')",
+        "Q1-pretty": "What blood product(s) did the patient receive? SELECT ALL THAT APPLY",
+        "Q1-list": [
+            "Red blood cells",
+            "Platelets",
+            "Plasma",
+            "Cryoprecipitate",
+            "Hematopoietic stem cells",
+            "Whole blood",
+            "Lymphocytes",
+            "Granulocytes",
+            "Other, please specify"
+        ],
+        "Q1-word-replace": "{product-list}",
+
+        "Q3-pretty": "Within 2 hours of the completion of administration of a blood product, which if any, of the following treatments for acute respiratory distress were initiated? SELECT ALL THAT APPLY",
+        "Q3-list": [
+            "oxygen administration initiated after transfusion",
+            "Ventilator support initiated after transfusion"
+        ],
+        "Q3-word-replace": "{treatment-list}"
+    },
+    "pressureInjuryAlgorithmQuestions": {
+        "EQ3a-word-replace": "{eq3a-list}",
+        "Q7-word-replace": "{q7-list}",
+
+        "EQ3a-pretty": "Which, if any type(s) of pressure injuries (pressure ulcers) did the patient have during the stay?",
+        "Q7-pretty": "Which secondary morbidities developed? Select all that apply.",
+
+        "EQ3a-list": [
+            "only present on admission (PoA) pressure injury (pressure ulcer)",
+            "only hospital-acquired pressure injury (pressure ulcer)",
+            "Both - at least one of each type (present on admission AND hospital-acquired)",
+            "Can't tell type of pressure injury (pressure ulcer)",
+            "Can't tell any pressure injury (pressure ulcer)"
+        ],
+        "Q7-list": [
+            "osteomyelitis",
+            "Tunneling or undermining",
+            "Fissure"
+        ]
+    },
+    "surgeryAlgorithmQuestions": {
+        "EQ1-word-replace": "{eq1-list}",
+        "EQ2-word-replace": "{eq2-list}",
+        "Q1-word-replace": "{q1-list}",
+        "Q2-word-replace": "{q2-list}",
+        "Q3-word-replace": "{q3-list}",
+        "Q3a-word-replace": "{q3a-list}",
+        "Q4-word-replace": "{q4-list}",
+        "Q5-word-replace": "{q5-list}",
+        "Q6-word-replace": "{q6-list}",
+        "Q7-word-replace": "{q7-list}",
+        "Q8-word-replace": "{q8-list}",
+        "Q9-word-replace": "{q9-list}",
+        "Q10-word-replace": "{q10-list}",
+        "Q11-word-replace": "{q11-list}",
+        "Q13-word-replace": "{q13-list}",
+        "Q14-word-replace": "{q14-list}",
+        "Q14a-word-replace": "{q14a-list}",
+        "Q14b-word-replace": "{q14b-list}",
+
+        "EQ1-pretty": "Which of the following did the patient have? Select all that apply",
+        "EQ2-pretty": "How many oR procedures did the patient undergo?",
+        "Q1-pretty": "What combination of anesthesia and procedural sedation was used?",
+        "Q2-pretty": "Which type of anesthesia was used? Select all that apply",
+        "Q3-pretty": "Which, if any, of the following occurred? Select all that apply",
+        "Q3a-pretty": "Why was the normal organ removed?",
+        "Q4-pretty": "Why was the patient returned to the oR? Select all that apply",
+        "Q5-pretty": "What type of object was found? Select all that apply",
+        "Q6-pretty": "What was incorrect about the oR procedure? Select all that apply",
+        "Q7-pretty": "Why was the implant incorrect?",
+        "Q8-pretty": "Which, if any, of the following injuries occurred during the oR procedure and/or anesthesia? Select all that apply",
+        "Q9-pretty": "Which, if any, of the following occurred during the oR procedure and/or anesthesia? Select all that apply",
+        "Q10-pretty": "Which, if any of the following occurred during or following the oR procedure and/or anesthesia? Select all that apply",
+        "Q11-pretty": "Which, if any, of the following occurred within 48 hours of operation or adminstration of anethesia? Select all that apply",
+        "Q13-pretty": "Which, if any, of the following occurred?",
+        "Q14-pretty": "What was the patient's documented American Society of Anesthesiologist's (ASA) Physical Classification System class prior to the first or only oR procedure?",
+        "Q14a-pretty": "When did the patient die?",
+        "Q14b-pretty": "What was the patient's documented American Society of Anesthesiologist's (ASA) Physical Classification System class prior to the second oR procedure?",
+
+        "EQ1-list": [
+            "Anesthesia",
+            "Procedural sedation"
+        ],
+        "EQ2-list": [
+            "Only one OR procedure",
+            "Two OR procedures",
+            "Three or more OR procedures"
+        ],
+        "Q1-list": [
+            "Procedural sedation only",
+            "Anesthesia only",
+            "Anesthesia and procedural sedation"
+        ],
+        "Q2-list": [
+            "General",
+            "Regional (e.g. epidural, spinal, or peripheral nerve blocks)",
+            "Local or topical"
+        ],
+        "Q3-list": [
+            "Unplanned return to oR",
+            "Retained object not present on admission",
+            "Incorrect operating room procedure, including incorrect implant",
+            "Unplanned removal of normal organ"
+        ],
+        "Q3a-list": [
+            "Due to unintended injury to organ during procedure",
+            "Due to mistaken removal of organ",
+            "Due to reason not specified as clinically appropriate"
+        ],
+        "Q4-list": [
+            "Bleeding",
+            "Revision of operative site",
+            "Other"
+        ],
+        "Q5-list": [
+            "Sponge",
+            "Needle (includes needle fragment or microneedle)",
+            "Towel",
+            "Whole instrument (e.g. clamp)",
+            "Instrument fragment",
+            "Other"
+        ],
+        "Q6-list": [
+            "Incorrect side",
+            "Incorrect site",
+            "Incorrect procedure (includes procedure done when none ordered)",
+            "Incorrect implant",
+            "Other"
+        ],
+        "Q7-list": [
+            "By mistake",
+            "Correct implant not available"
+        ],
+        "Q8-list": [
+            "Dental injury",
+            "ocular injury",
+            "Peri-operative injury",
+            "Unintended latrogenic pneumothorax",
+            "Unintended laceration or puncture",
+            "Injury to peripheral or cranial nerve or spinal cord",
+            "Air embolus",
+            "Burn",
+            "Electric shock"
+        ],
+        "Q9-list": [
+            "Unplanned conversion to general anesthesia from spinal, epidural, regional, or procedural sedation only",
+            "High spinal requiring intubation and/or assisted ventilation",
+            "Unintended awareness (during general anesthesia)",
+            "Malignant hypothermia",
+            "Other"
+        ],
+        "Q10-list": [
+            "Dehiscense, flap or wound failure or disruption, or graft failure",
+            "Unintended blockage, obstruction or ligation",
+            "Post-dural puncture headache",
+            "Other"
+        ],
+        "Q11-list": [
+            "Acute myocardial infarction (AMI) during or within 48 hours of operation or administration of anesthesia",
+            "Cardiac arrest during or within 24 hours of operation or administration of anesthesia",
+            "Central nervous system event (e.g. CVA seizures, coma) during or within 48 hours of operation or administration of anesthesia",
+            "Other"
+        ],
+        "Q13-list": [
+            "Reinstitution of ventilator support following discontinuance after operation",
+            "Continuous ventilator support for more than 7 days following operation"
+        ],
+        "Q14-list": [
+            "Class 1",
+            "Class 2",
+            "Class 3",
+            "Class 4",
+            "Class 5"
+        ],
+        "Q14a-list": [
+            "Following the induction of anesthesia and prior to leaving the operating room",
+            "Within 24 hours after leaving the operating room for the final time",
+            "More than 24 hours after leaving the operating room for the final time"
+        ],
+        "Q14b-list": [
+            "Class 1",
+            "Class 2",
+            "Class 3",
+            "Class 4",
+            "Class 5"
+        ]
+    },
+    "haiotherAlgorithmQuestions": {
+        "EQ2-pretty": "Which if any of the following hospital-acquired infection types did the patient experience?",
+        "EQ2-list": [
+            "Gastrointestinal infection",
+            "Eye, ear, nose, throat or mouth infection",
+            "Skin or soft tissue infection",
+            "Cardiovascular infection",
+            "Other device-related infection (colonoscope, duodenoscope, bronchoscope), please specify",
+            "Other healthcare-associated infections, please specify"
+        ],
+        "EQ2-word-replace": "{infection-types}"
+    },
+    "OOOIPart1AlgorithmQuestions": {
+        "Q2-pretty": "Did the patient experience any of the following?",
+        "Q2-list": [
+            "Incorrect non-operating room procedure",
+            "Unintended iatrogenic pneumothorax",
+            "Laceration or unintended puncture",
+            "Other (please specify)"
+        ],
+        "Q2-word-replace": "{q2-list}",
+
+        "Q3-pretty": "Which incorrect non-operating room procedure?",
+        "Q3-list": [
+            "Incorrect procedure (includes procedure done when none ordered)",
+            "Incorrect side",
+            "Incorrect site"
+        ],
+        "Q3-word-replace": "{q3-list}"
+    },
+    "OOOIPart3AlgorithmQuestions": {
+        "Q24a-pretty": "Which of the following adverse events related to the radiology or imaging study did the patient sustain?",
+        "Q24a-list": [
+            "Radiation overdose",
+            "Radiological procedure on wrong person or wrong body region",
+            "Incident related to introduction of an inappropriate metallic object in MRI room",
+            "Other"
+        ],
+        "Q24a-word-replace": "{q24a-list}"
+    },
+
+    "logPrefix": "logs/process_log_"
+}
+ 

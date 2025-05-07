@@ -1,0 +1,746 @@
+{
+  "StartAt": "Assign Vars",
+  "QueryLanguage": "JSONata",
+  "States": {
+    "Assign Vars": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:assignVarsStepFunction:$LATEST",
+        "Payload": "{% $states.input %}"
+      },
+      "Next": "Extract Data Pass",
+      "QueryLanguage": "JSONata",
+      "Assign": {
+        "prompts": "{% $states.result.Payload.prompts %}",
+        "embeddings_key": "{% $states.result.Payload.embeddings_key %}",
+        "all_page_text_file": "{% $states.result.Payload.all_page_text_file %}",
+        "passed_data": "{% $states.result.Payload.passed_data %}",
+        "algorithm": "{% $states.result.Payload.algorithm %}",
+        "config_questions_key": "covidAlgorithmQuestions",
+        "COV_POA": true,
+        "COVID_EVENT": false,
+        "EQ1_response": "",
+        "Q1a_response": "",
+        "Q1b_response": "",
+        "Q1c_response": "",
+        "Q1c2_response": "",
+        "Q1d_response": "",
+        "Q2a_response": "",
+        "Q3a_response": "",
+        "Q3b_response": "",
+        "Q4a_response": "",
+        "Q4b_response": ""
+      }
+    },
+    "Extract Data Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "discharge_date": "{% $passed_data.DischargeDate %}",
+        "discharge_date_confidence": "{% $passed_data.DischargeDate_Confidence %}",
+        "discharge_date_pages_used": "{% $passed_data.DischargeDate_PagesUsed %}",
+        "admission_date": "{% $passed_data.AdmissionDate %}"
+      },
+      "Next": "Date of Discharge Month Format Check Choice"
+    },
+    "Date of Discharge Month Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Discharge Month Format Correction Pass",
+          "Condition": "{% $substring($discharge_date, 1, 1) = '/' %}"
+        }
+      ],
+      "Default": "Date of Discharge Day Format Check Choice"
+    },
+    "Date of Discharge Month Format Correction Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "discharge_date": "{% '0' & $discharge_date %}"
+      },
+      "Next": "Date of Discharge Day Format Check Choice"
+    },
+    "Date of Discharge Day Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Discharge Day Correction Pass",
+          "Condition": "{% $substring($discharge_date, 4, 1) = '/' %}"
+        }
+      ],
+      "Default": "Date of Discharge Year Format Choice"
+    },
+    "Date of Discharge Year Format Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Comment": "Identify 2-digit years",
+          "Next": "Date of Discharge Year Format Correction Pass",
+          "Condition": "{% $length($discharge_date) = 8 %}"
+        }
+      ],
+      "Default": "Reformat Discharge Date Pass"
+    },
+    "Date of Discharge Day Correction Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "discharge_date": "{% $substring($discharge_date, 0, 3) & '0' & $substring($discharge_date, 3) %}"
+      },
+      "Comment": "Note that year formatting errors (2 digits instead of 4) are more complex in possible type; if they occur, a prompt instruction solution is best",
+      "Next": "Date of Discharge Year Format Choice"
+    },
+    "Date of Discharge Year Format Correction Pass": {
+      "Type": "Pass",
+      "Comment": "Turn a 2-digit year into a 4 digit year starting with 20",
+      "Assign": {
+        "discharge_date": "{% $substring($discharge_date, 0, $length($discharge_date) - 2) & '20' & $substring($discharge_date, $length($discharge_date) - 2) %}"
+      },
+      "Next": "Reformat Discharge Date Pass"
+    },
+    "Reformat Discharge Date Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "discharge_date_reformatted": "{% $substring($discharge_date, 6, 4) & '-' & $substring($discharge_date, 0, 2) & '-' & $substring($discharge_date, 3, 2) %}"
+      },
+      "Next": "Set Covid Start Date Pass"
+    },
+    "Set Covid Start Date Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "covid_start_date": "2020-01-20"
+      },
+      "Next": "Check Discharge Date"
+    },
+    "Check Discharge Date": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $discharge_date_reformatted >= $covid_start_date %}",
+          "Next": "Set EQ1 Yes Pass"
+        }
+      ],
+      "Default": "Set EQ1 No Pass"
+    },
+    "Set EQ1 No Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "EQ1_response": {
+          "Question": "Is this patient chart from a time period in which COVID-19 was a concern in this healthcare facility or system?",
+          "Answer": "no",
+          "Reason": "This answer was not LLM-generated directly, but instead calculated following the rule that a yes answer should correspond to any record where the discharge date is on or after 01-20-2020. Pages used and confidence score reflect values for the discharge date abstraction from Administrative module.",
+          "Pages used": "{% $discharge_date_pages_used %}",
+          "Confidence score": "{% $discharge_date_confidence %}"
+        }
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set EQ1 Yes Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "EQ1_response": {
+          "Question": "Is this patient chart from a time period in which COVID-19 was a concern in this healthcare facility or system?",
+          "Answer": "yes",
+          "Reason": "This answer was not LLM-generated directly, but instead calculated following the rule that a yes answer should correspond to any record where the discharge date is on or after 01-20-2020. Pages used and confidence score reflect values for the discharge date abstraction from Administrative module.",
+          "Pages used": "{% $discharge_date_pages_used %}",
+          "Confidence score": "{% $discharge_date_confidence %}"
+        }
+      },
+      "Next": "Q1a"
+    },
+    "Q1a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q1a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1a choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1a choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $Q1a_response.Answer = 'yes' %}",
+          "Next": "Q2a"
+        }
+      ],
+      "Default": "Q1b"
+    },
+    "Q2a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q2a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q2a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q2a choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q2a choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q3a",
+          "Condition": "{% $Q2a_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q3b"
+    },
+    "Q3a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q3a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q3a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3a choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q3a choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Admission Month Format Check Choice",
+          "Condition": "{% $Q3a_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set COV.POA = True"
+    },
+    "Date of Admission Month Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Admission Month Format Correction Pass",
+          "Condition": "{% $substring($admission_date, 1, 1) = '/' %}"
+        }
+      ],
+      "Default": "Date of Admission Day Format Check Choice"
+    },
+    "Date of Admission Month Format Correction Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_date": "{% '0' & $admission_date %}"
+      },
+      "Next": "Date of Admission Day Format Check Choice"
+    },
+    "Date of Admission Day Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Admission Day Correction Pass",
+          "Condition": "{% $substring($admission_date, 4, 1) = '/' %}"
+        }
+      ],
+      "Default": "Date of Admission Year Format Choice"
+    },
+    "Date of Admission Year Format Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Comment": "Identify 2-digit years",
+          "Next": "Date of Admission Year Format Correction Pass",
+          "Condition": "{% $length($admission_date) = 8 %}"
+        }
+      ],
+      "Default": "Extract Admission Date Parts"
+    },
+    "Date of Admission Day Correction Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_date": "{% $substring($admission_date, 0, 3) & '0' & $substring($admission_date, 3) %}"
+      },
+      "Comment": "Note that year formatting errors (2 digits instead of 4) are more complex in possible type; if they occur, a prompt instruction solution is best",
+      "Next": "Date of Admission Year Format Choice"
+    },
+    "Date of Admission Year Format Correction Pass": {
+      "Type": "Pass",
+      "Comment": "Turn a 2-digit year into a 4 digit year starting with 20",
+      "Assign": {
+        "admission_date": "{% $substring($admission_date, 0, $length($admission_date) - 2) & '20' & $substring($admission_date, $length($admission_date) - 2) %}"
+      },
+      "Next": "Extract Admission Date Parts"
+    },
+    "Extract Admission Date Parts": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_month": "{% $substring($admission_date, 0, 2) %}",
+        "admission_day": "{% $substring($admission_date, 3, 2) %}",
+        "admission_year": "{% $substring($admission_date, 6, 4) %}"
+      },
+      "Next": "Extract Discharge Date Parts"
+    },
+    "Extract Discharge Date Parts": {
+      "Type": "Pass",
+      "Assign": {
+        "discharge_month": "{% $substring($discharge_date, 0, 2) %}",
+        "discharge_day": "{% $substring($discharge_date, 3, 2) %}",
+        "discharge_year": "{% $substring($discharge_date, 6, 4) %}"
+      },
+      "Next": "Build ISO Dates"
+    },
+    "Build ISO Dates": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_iso": "{% $admission_year & '-' & $admission_month & '-' & $admission_day %}",
+        "discharge_iso": "{% $discharge_year & '-' & $discharge_month & '-' & $discharge_day %}"
+      },
+      "Next": "Calculate Days Between"
+    },
+    "Calculate Days Between": {
+      "Type": "Pass",
+      "Assign": {
+        "days_between": "{% ($toMillis($discharge_iso) - $toMillis($admission_iso)) / (1000 * 60 * 60 * 24) %}"
+      },
+      "Next": "Set COV.POA = False"
+    },
+    "Set COV.POA = False": {
+      "Type": "Pass",
+      "Assign": {
+        "COV_POA": "{% false %}"
+      },
+      "Next": "LC1 Choice"
+    },
+    "LC1 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q4a",
+          "Condition": "{% $days_between >= 14 %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q4a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q4a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q4a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q4a choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q4a choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q4b",
+          "Condition": "{% $Q4a_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q4b": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q4b %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q4b_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q4b Pass",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q4b Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "COVID_EVENT": true
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set COV.POA = True": {
+      "Type": "Pass",
+      "Assign": {
+        "COV_POA": "{% true %}"
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Q3b": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q3b %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q3b_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3b choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q3b choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Admission Month Format Check Choice",
+          "Condition": "{% $Q3b_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set COV.POA = True"
+    },
+    "Q1b": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1b %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q1b_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1b choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1b choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $Q1b_response.Answer = 'yes' %}",
+          "Next": "Q2a"
+        }
+      ],
+      "Default": "Q1c"
+    },
+    "Q1c": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1c %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q1c_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1c choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1c choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q1c2",
+          "Condition": "{% $Q1c_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q1d"
+    },
+    "Q1d": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1d %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q1d_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1d choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1d choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q2a",
+          "Condition": "{% $Q1d_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Date of Admission Month Format Check Choice"
+    },
+    "Q1c2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1c2 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q1c2_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q2a",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Set New Data to Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "passed_data": "{% $merge([$passed_data, {\"COVID_EVENT\": $COVID_EVENT}]) %}"
+      },
+      "Next": "Collect and Upload"
+    },
+    "Collect and Upload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:collectAndUpload:$LATEST",
+        "Payload": {
+          "COVID_EVENT": "{% $COVID_EVENT %}",
+          "EQ1": "{% $EQ1_response %}",
+          "Q1a": "{% $Q1a_response %}",
+          "Q1b": "{% $Q1b_response %}",
+          "Q1c": "{% $Q1c_response %}",
+          "Q1c2": "{% $Q1c2_response %}",
+          "Q1d": "{% $Q1d_response %}",
+          "Q2a": "{% $Q2a_response %}",
+          "Q3a": "{% $Q3a_response %}",
+          "Q3b": "{% $Q3b_response %}",
+          "Q4a": "{% $Q4a_response %}",
+          "Q4b": "{% $Q4b_response %}",
+          "passed_data": "{% $passed_data %}",
+          "algorithm": "HAI-COVID-19",
+          "page-embeddings-file": "{% $embeddings_key %}"
+        }
+      },
+      "End": true
+    },
+    "Fail State": {
+      "Type": "Fail",
+      "Error": "$['Error']",
+      "Cause": "$['Cause']"
+    }
+  }
+}

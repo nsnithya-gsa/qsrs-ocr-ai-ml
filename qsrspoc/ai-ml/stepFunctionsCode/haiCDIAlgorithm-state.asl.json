@@ -1,0 +1,517 @@
+{
+  "StartAt": "Assign Vars",
+  "QueryLanguage": "JSONata",
+  "States": {
+    "Assign Vars": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:assignVarsStepFunction:$LATEST",
+        "Payload": "{% $states.input %}"
+      },
+      "Assign": {
+        "prompts": "{% $states.result.Payload.prompts %}",
+        "embeddings_key": "{% $states.result.Payload.embeddings_key %}",
+        "all_page_text_file": "{% $states.result.Payload.all_page_text_file %}",
+        "passed_data": "{% $states.result.Payload.passed_data %}",
+        "algorithm": "{% $states.result.Payload.algorithm %}",
+        "config_questions_key": "",
+        "CDI_EVENT": "{% false %}",
+        "EQR2_response": "",
+        "EL3_response": "",
+        "EQ1_response": "",
+        "EQ2_response": "",
+        "Q1_response": "",
+        "Q2_response": "",
+        "Q3_response": "",
+        "Q4_response": ""
+      },
+      "Next": "Extract Data Pass"
+    },
+    "Extract Data Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "age": "{% $passed_data.AgeAtAdmission %}",
+        "admission_date": "{% $passed_data.AdmissionDate %}",
+        "principal_dx_code": "{% $passed_data.PrincipalDxCode %}",
+        "other_dx_codes": "{% $passed_data.OtherDxCodes %}",
+        "dx_codes_poa": "{% $passed_data.DxPOA %}"
+      },
+      "Next": "EQR1 Choice"
+    },
+    "EQR1 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set New Data to Pass",
+          "Condition": "{% $number($age) < 2 %}"
+        }
+      ],
+      "Default": "CDI Principal or Other Dx Code Choice"
+    },
+    "CDI Principal or Other Dx Code Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $contains($principal_dx_code, 'a04.7') or $contains($other_dx_codes, 'a04.7') %}",
+          "Next": "Check ICD Code POA Choice"
+        }
+      ],
+      "Default": "EQ1"
+    },
+    "Check ICD Code POA Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set New Data to Pass",
+          "Condition": "{% $contains($dx_codes_poa, 'a04.7') %}"
+        }
+      ],
+      "Default": "EQ1"
+    },
+    "EQ1": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.EQ1 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "EQ1_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "EQ1 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "EQ1 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q1",
+          "Condition": "{% $EQ1_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "EQ2"
+    },
+    "Q1": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q1_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set New Data to Pass",
+          "Condition": "{% $Q1_response.Answer = \"can't tell\" %}"
+        }
+      ],
+      "Default": "Set PosCDIDate Pass"
+    },
+    "Set PosCDIDate Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "PosCDIDate": "{% $string($Q1_response.Answer) %}"
+      },
+      "Next": "Extract Admission Date Parts"
+    },
+    "Extract Admission Date Parts": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_month": "{% $substring($admission_date, 0, 2) %}",
+        "admission_day": "{% $substring($admission_date, 3, 2) %}",
+        "admission_year": "{% $substring($admission_date, 6, 4) %}"
+      },
+      "Next": "Extract PosCDIDate Parts"
+    },
+    "Extract PosCDIDate Parts": {
+      "Type": "Pass",
+      "Assign": {
+        "pos_cdi_month": "{% $substring($PosCDIDate, 0, 2) %}",
+        "pos_cdi_day": "{% $substring($PosCDIDate, 3, 2) %}",
+        "pos_cdi_year": "{% $substring($PosCDIDate, 6, 4) %}"
+      },
+      "Next": "Build ISO Dates"
+    },
+    "Build ISO Dates": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_iso": "{% $admission_year & '-' & $admission_month & '-' & $admission_day %}",
+        "pos_cdi_iso": "{% $pos_cdi_year & '-' & $pos_cdi_month & '-' & $pos_cdi_day %}"
+      },
+      "Next": "Calculate Days Between"
+    },
+    "Calculate Days Between": {
+      "Type": "Pass",
+      "Assign": {
+        "days_between": "{% ($toMillis($pos_cdi_iso) - $toMillis($admission_iso)) / (1000 * 60 * 60 * 24) %}"
+      },
+      "Next": "R3 Choice"
+    },
+    "R3 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q2",
+          "Condition": "{% $days_between > 2 %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q2 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q2_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q2 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q2 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q4",
+          "Condition": "{% $Q2_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q3"
+    },
+    "Q4": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q4 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q4_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q4 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q4 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set New Data to Pass",
+          "Condition": "{% $Q4_response.Answer = \"can't tell\" %}"
+        }
+      ],
+      "Default": "Set CDI Doc Date Pass"
+    },
+    "Set CDI Doc Date Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "CDIDocDate": "{% $string($Q4_response.Answer) %}"
+      },
+      "Next": "Extract CDI Doc Date Parts"
+    },
+    "Extract CDI Doc Date Parts": {
+      "Type": "Pass",
+      "Assign": {
+        "cdi_doc_month": "{% $substring($CDIDocDate, 0, 2) %}",
+        "cdi_doc_day": "{% $substring($CDIDocDate, 3, 2) %}",
+        "cdi_doc_year": "{% $substring($CDIDocDate, 6, 4) %}"
+      },
+      "Next": "Extract Pos CDI Date Parts"
+    },
+    "Extract Pos CDI Date Parts": {
+      "Type": "Pass",
+      "Assign": {
+        "pos_cdi_month": "{% $substring($PosCDIDate, 0, 2) %}",
+        "pos_cdi_day": "{% $substring($PosCDIDate, 3, 2) %}",
+        "pos_cdi_year": "{% $substring($PosCDIDate, 6, 4) %}"
+      },
+      "Next": "Build ISO Dates Pass"
+    },
+    "Build ISO Dates Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "cdi_doc_iso": "{% $cdi_doc_year & '-' & $cdi_doc_month & '-' & $cdi_doc_day %}",
+        "pos_cdi_iso": "{% $pos_cdi_year & '-' & $pos_cdi_month & '-' & $pos_cdi_day %}"
+      },
+      "Next": "Calculate Days Between Pass"
+    },
+    "Calculate Days Between Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "cdi_days_between": "{% ($toMillis($pos_cdi_iso) - $toMillis($cdi_doc_iso)) / (1000 * 60 * 60 * 24) %}"
+      },
+      "Next": "R4 Choice"
+    },
+    "R4 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "R4 Pass",
+          "Condition": "{% $cdi_days_between >= 0 %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "EQ2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.EQ2 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "EQ2_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "EQ2 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "EQ2 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q1",
+          "Condition": "{% $EQ2_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q3 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q3_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q3 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q3 Pass",
+          "Condition": "{% $Q3_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q3 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "CDI_EVENT": "{% true %}"
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "R4 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "CDI_EVENT": "{% true %}"
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set New Data to Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "passed_data": "{% $merge([$passed_data, {\"CDI_EVENT\": $CDI_EVENT}]) %}"
+      },
+      "Next": "Collect and Upload"
+    },
+    "Collect and Upload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:collectAndUpload:$LATEST",
+        "Payload": {
+          "CDI_EVENT": "{% $CDI_EVENT %}",
+          "EQR2": "{% $EQR2_response %}",
+          "EL3": "{% $EL3_response %}",
+          "EQ1": "{% $EQ1_response %}",
+          "EQ2": "{% $EQ2_response %}",
+          "Q1": "{% $Q1_response %}",
+          "Q2": "{% $Q2_response %}",
+          "Q3": "{% $Q3_response %}",
+          "Q4": "{% $Q4_response %}",
+          "passed_data": "{% $passed_data %}",
+          "algorithm": "HAI-CDI",
+          "page-embeddings-file": "{% $embeddings_key %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "End": true
+    },
+    "Fail State": {
+      "Type": "Fail",
+      "Error": "$['Error']",
+      "Cause": "$['Cause']"
+    }
+  }
+}

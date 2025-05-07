@@ -1,0 +1,375 @@
+{
+  "StartAt": "Assign Vars",
+  "QueryLanguage": "JSONata",
+  "States": {
+    "Assign Vars": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:assignVarsStepFunction:$LATEST",
+        "Payload": "{% $states.input %}"
+      },
+      "Next": "Q1",
+      "QueryLanguage": "JSONata",
+      "Assign": {
+        "prompts": "{% $states.result.Payload.prompts %}",
+        "embeddings_key": "{% $states.result.Payload.embeddings_key %}",
+        "all_page_text_file": "{% $states.result.Payload.all_page_text_file %}",
+        "passed_data": "{% $states.result.Payload.passed_data %}",
+        "algorithm": "{% $states.result.Payload.algorithm %}",
+        "config_questions_key": "genericAlgorithmQuestions",
+        "CVC": false,
+        "UrinaryCath": false,
+        "Vent": false,
+        "Vent24": false,
+        "OR_procedure": false,
+        "Non_OR_procedure": false,
+        "Q1_response": "",
+        "Q1a_response": "",
+        "Q2_response": "",
+        "Q3_response": "",
+        "Q4_response": "",
+        "Q5_response": ""
+      }
+    },
+    "Q1": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q1_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set CVC = True",
+          "Condition": "{% $Q1_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q1a"
+    },
+    "Set CVC = True": {
+      "Type": "Pass",
+      "Next": "Q1a",
+      "Assign": {
+        "CVC": "{% true %}"
+      }
+    },
+    "Q1a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q1a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q2",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 180
+    },
+    "Q2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q2 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q2_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q2 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 180
+    },
+    "Q2 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set UrinaryCath = True",
+          "Condition": "{% $Q2_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q3"
+    },
+    "Q3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q3 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q3_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 180
+    },
+    "Q3 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set Vent = True",
+          "Condition": "{% $Q3_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q5"
+    },
+    "Set Vent = True": {
+      "Type": "Pass",
+      "Assign": {
+        "Vent": "{% true %}"
+      },
+      "Next": "Q4"
+    },
+    "Q4": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q4 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q4_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q4 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 180
+    },
+    "Q4 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set Vent24 = True",
+          "Condition": "{% $Q4_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q5"
+    },
+    "Set Vent24 = True": {
+      "Type": "Pass",
+      "Assign": {
+        "Vent24": "{% true %}"
+      },
+      "Next": "Q5"
+    },
+    "Q5": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q5 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q5_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q5 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 180
+    },
+    "Q5 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set OR_procedure = True",
+          "Condition": "{% $Q5_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set Non_OR_Procedure = True"
+    },
+    "Set Non_OR_Procedure = True": {
+      "Type": "Pass",
+      "Assign": {
+        "Non_OR_procedure": "{% true %}"
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set OR_procedure = True": {
+      "Type": "Pass",
+      "Assign": {
+        "OR_procedure": "{% true %}"
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set UrinaryCath = True": {
+      "Type": "Pass",
+      "Assign": {
+        "UrinaryCath": "{% true %}"
+      },
+      "Next": "Q3"
+    },
+    "Set New Data to Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "passed_data": "{% $merge([$passed_data, { \"CVC\": $CVC, \"UrinaryCath\": $UrinaryCath, \"Vent\": $Vent, \"Vent24\": $Vent24, \"OR_procedure\": $OR_procedure, \"Non_OR_procedure\": $Non_OR_procedure }]) %}"
+      },
+      "Next": "Collect and Upload"
+    },
+    "Collect and Upload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:collectAndUpload:$LATEST",
+        "Payload": {
+          "Q1": "{% $Q1_response %}",
+          "Q1a": "{% $Q1a_response %}",
+          "Q2": "{% $Q2_response %}",
+          "Q3": "{% $Q3_response %}",
+          "Q4": "{% $Q4_response %}",
+          "Q5": "{% $Q5_response %}",
+          "passed_data": "{% $passed_data %}",
+          "algorithm": "Generic",
+          "page-embeddings-file": "{% $embeddings_key %}"
+        }
+      },
+      "End": true
+    },
+    "Fail State": {
+      "Type": "Fail",
+      "Error": "$['Error']",
+      "Cause": "$['Cause']"
+    }
+  }
+}

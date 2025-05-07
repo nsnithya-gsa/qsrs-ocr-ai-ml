@@ -1,0 +1,19 @@
+#1 Use an official Python runtime as a parent image
+FROM python:3.9-slim
+
+#2 Set the working directory in the container
+WORKDIR /app
+
+#3 Copy the current directory contents into the container at /app
+COPY . /app
+COPY awsbatch_page_embeddings_job.py .
+
+#4 Install any needed packages specified in requirements.txt
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+#5 Define environment variable
+ENV bucket_name="qsrs-ocr-dev-poc"
+
+#6 Run the batch job script when the container launches
+CMD ["python", "awsbatch_page_embeddings_job.py"]

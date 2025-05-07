@@ -1,0 +1,928 @@
+{
+  "StartAt": "Assign Vars",
+  "QueryLanguage": "JSONata",
+  "States": {
+    "Assign Vars": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:assignVarsStepFunction:$LATEST",
+        "Payload": "{% $states.input %}"
+      },
+      "Next": "Date of Birth",
+      "Assign": {
+        "prompts": "{% $states.result.Payload.prompts %}",
+        "embeddings_key": "{% $states.result.Payload.embeddings_key %}",
+        "all_page_text_file": "{% $states.result.Payload.all_page_text_file %}",
+        "passed_data": "{% $states.result.Payload.passed_data %}",
+        "algorithm": "{% $states.result.Payload.algorithm %}",
+        "config_questions_key": "administrativeAlgorithmQuestions",
+        "DOB_response": "",
+        "gender_response": "",
+        "race_response": "",
+        "ethnicity_response": "",
+        "patient_id_response": "",
+        "hospital_id_response": "",
+        "admission_date_response": "",
+        "priority_admission_response": "",
+        "discharge_date_response": "",
+        "discharge_date_confidence_score": "",
+        "discharge_date_pages_used": "",
+        "discharge_status_response": "",
+        "origin_for_admission_response": "",
+        "primary_payer_response": "",
+        "attending_npi_response": "",
+        "operating_npi_response": "",
+        "cohort_charts_response": "",
+        "principal_dx_response": "",
+        "other_dx_discharge_response": "",
+        "dx_poa_response": "",
+        "principal_procedure_response": "",
+        "other_procedure_response": ""
+      }
+    },
+    "Date of Birth": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Date of Birth` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "DOB_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Set Date of Birth Pass"
+    },
+    "Set Date of Birth Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "date_of_birth": "{% $string($DOB_response.Answer) %}"
+      },
+      "Next": "Date of Birth Month Format Check Choice"
+    },
+    "Date of Birth Month Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Birth Month Format Correction Pass",
+          "Condition": "{% $substring($date_of_birth, 1, 1) = '/' %}"
+        }
+      ],
+      "Default": "Date of Birth Day Format Check Choice"
+    },
+    "Date of Birth Month Format Correction Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "date_of_birth": "{% '0' & $date_of_birth %}"
+      },
+      "Next": "Date of Birth Day Format Check Choice"
+    },
+    "Date of Birth Day Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Birth Day Correction Pass",
+          "Condition": "{% $substring($date_of_birth, 4, 1) = '/' %}"
+        }
+      ],
+      "Default": "Date of Birth Year Format Check Choice"
+    },
+    "Date of Birth Day Correction Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "date_of_birth": "{% $substring($date_of_birth, 0, 3) & '0' & $substring($date_of_birth, 3) %}"
+      },
+      "Comment": "Note that year formatting errors (2 digits instead of 4) are more complex in possible type; if they occur, a prompt instruction solution is best",
+      "Next": "Date of Birth Year Format Check Choice"
+    },
+    "Date of Birth Year Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Comment": "This will identify 2-digit dates of birth",
+          "Condition": "{% $length($date_of_birth) = 8 and $substring($date_of_birth, 2, 1) = '/' and $substring($date_of_birth, 5, 1) = '/' %}",
+          "Next": "Date of Birth Year Format Correction Pass"
+        },
+        {
+          "Next": "Gender",
+          "Condition": "{% $length($date_of_birth) = 10 and $substring($date_of_birth, 2, 1) = '/' and $substring($date_of_birth, 5, 1) = '/' %}"
+        }
+      ],
+      "Default": "Fix Invalid Date Pass"
+    },
+    "Fix Invalid Date Pass": {
+      "Type": "Pass",
+      "Comment": "If a date is malformed in an unpredictable way, set to the default to prevent this from blocking abstraction.",
+      "Assign": {
+        "date_of_birth": "01/01/1900"
+      },
+      "Next": "Gender"
+    },
+    "Date of Birth Year Format Correction Pass": {
+      "Type": "Pass",
+      "Comment": "This temporary assumption that no patients are under 18 prevents 2-digit birth years from blocking abstraction",
+      "Assign": {
+        "eighteen_years_ago": "{% $string($substring($now(), 2, 2) - 18) %}",
+        "two_digit_year": "{% $substring($date_of_birth, $length($date_of_birth) - 2, 2) %}"
+      },
+      "Next": "Determine Birth Century Choice"
+    },
+    "Determine Birth Century Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Comment": "This temporary assumption that no patients are over 99 prevents 2-digit birth years from blocking abstraction",
+          "Next": "Birth Century 2000 Pass",
+          "Condition": "{% $number($two_digit_year) <= $number($eighteen_years_ago) %}"
+        }
+      ],
+      "Default": "Birth Century 1900 Pass"
+    },
+    "Birth Century 1900 Pass": {
+      "Type": "Pass",
+      "Comment": "Turn a 2-digit year into a 4 digit year starting with 19",
+      "Assign": {
+        "date_of_birth": "{% $substring($date_of_birth, 0, $length($date_of_birth) - 2) & '19' & $substring($date_of_birth, $length($date_of_birth) - 2) %}"
+      },
+      "Next": "Gender"
+    },
+    "Birth Century 2000 Pass": {
+      "Type": "Pass",
+      "Comment": "Turn a 2-digit year into a 4 digit year starting with 20",
+      "Assign": {
+        "date_of_birth": "{% $substring($date_of_birth, 0, $length($date_of_birth) - 2) & '20' & $substring($date_of_birth, $length($date_of_birth) - 2) %}"
+      },
+      "Next": "Gender"
+    },
+    "Gender": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Gender %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "gender_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Race"
+    },
+    "Race": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Race %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Race"
+        }
+      },
+      "Assign": {
+        "race_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Hispanic/Latino"
+    },
+    "Hispanic/Latino": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Is the patient's ethnicity Hispanic or Latino` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "ethnicity_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Admission date"
+    },
+    "Admission date": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Admission Date` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "admission_date_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Set Admission Date Pass"
+    },
+    "Set Admission Date Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_date": "{% $string($admission_date_response.Answer) %}"
+      },
+      "Next": "Date of Admission Month Format Check Choice"
+    },
+    "Date of Admission Month Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Admission Month Format Correction Pass",
+          "Condition": "{% $substring($admission_date, 1, 1) = '/' %}"
+        }
+      ],
+      "Default": "Date of Admission Day Format Check Choice"
+    },
+    "Date of Admission Month Format Correction Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_date": "{% '0' & $admission_date %}"
+      },
+      "Next": "Date of Admission Day Format Check Choice"
+    },
+    "Date of Admission Day Format Check Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Date of Admission Day Correction Pass",
+          "Condition": "{% $substring($admission_date, 4, 1) = '/' %}"
+        }
+      ],
+      "Default": "Date of Admission Year Format Choice"
+    },
+    "Date of Admission Year Format Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Comment": "Identify 2-digit years",
+          "Next": "Date of Admission Year Format Correction Pass",
+          "Condition": "{% $length($admission_date) = 8 %}"
+        }
+      ],
+      "Default": "Discharge date"
+    },
+    "Date of Admission Day Correction Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "admission_date": "{% $substring($admission_date, 0, 3) & '0' & $substring($admission_date, 3) %}"
+      },
+      "Comment": "Note that year formatting errors (2 digits instead of 4) are more complex in possible type; if they occur, a prompt instruction solution is best",
+      "Next": "Date of Admission Year Format Choice"
+    },
+    "Date of Admission Year Format Correction Pass": {
+      "Type": "Pass",
+      "Comment": "Turn a 2-digit year into a 4 digit year starting with 20",
+      "Assign": {
+        "admission_date": "{% $substring($admission_date, 0, $length($admission_date) - 2) & '20' & $substring($admission_date, $length($admission_date) - 2) %}"
+      },
+      "Next": "Discharge date"
+    },
+    "Discharge date": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Discharge Date` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "discharge_date_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Set Discharge Date Details Pass"
+    },
+    "Set Discharge Date Details Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "discharge_date_pages_used": "{% $lookup($discharge_date_response, 'Pages used') %}",
+        "discharge_date_confidence_score": "{% $lookup($discharge_date_response, 'Confidence score') %}"
+      },
+      "Next": "Discharge status"
+    },
+    "Discharge status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Patient Discharge Status` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Patient Discharge Status"
+        }
+      },
+      "Assign": {
+        "discharge_status_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Priority type of admission"
+    },
+    "Priority type of admission": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Priority type of Admission` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Priority type of Admission"
+        }
+      },
+      "Assign": {
+        "priority_admission_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Origin of admission"
+    },
+    "Origin of admission": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Point of Origin for Admission` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Point of Origin for Admission"
+        }
+      },
+      "Assign": {
+        "origin_for_admission_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Unique patient ID"
+    },
+    "Unique patient ID": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Unique Patient Identifier` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "patient_id_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Hospital Tax ID"
+    },
+    "Hospital Tax ID": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Hospital Federal Tax Identification Number` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "hospital_id_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Primary payer"
+    },
+    "Primary payer": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Type of Primary Payer` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Type of Primary Payer"
+        }
+      },
+      "Assign": {
+        "primary_payer_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Attending NPI"
+    },
+    "Attending NPI": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Attending Physician NPI` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "attending_npi_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Operating NPI"
+    },
+    "Operating NPI": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Operating Physician NPI` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "operating_npi_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Cohort of charts"
+    },
+    "Cohort of charts": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Specific Cohorts of Charts` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Specific Cohorts of Charts"
+        }
+      },
+      "Assign": {
+        "cohort_charts_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Principal Dx"
+    },
+    "Principal Dx": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Principal Diagnosis` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "principal_dx_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Other Dx at discharge"
+    },
+    "Other Dx at discharge": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Other Diagnoses at Discharge` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "other_dx_discharge_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Other Dx POA"
+    },
+    "Other Dx POA": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.POA %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "dx_poa_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Primary procedure"
+    },
+    "Primary procedure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Principal Procedure` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "principal_procedure_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Other procedure"
+    },
+    "Other procedure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.`Other Procedure` %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "other_procedure_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "TimeoutSeconds": 120,
+      "Next": "Extract Years Pass"
+    },
+    "Extract Years Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "year_of_birth": "{% $substring($date_of_birth, 6, 4) %}",
+        "admission_year": "{% $substring($admission_date, 6, 4) %}"
+      },
+      "Next": "Calculate Base Age Pass"
+    },
+    "Calculate Base Age Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "base_age": "{% $number($admission_year) - $number($year_of_birth) %}"
+      },
+      "Next": "Extract Day Month Pass"
+    },
+    "Extract Day Month Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "dob_month": "{% $number($substring($date_of_birth, 0, 2)) %}",
+        "dob_day": "{% $number($substring($date_of_birth, 3, 2)) %}",
+        "admission_month": "{% $number($substring($admission_date, 0, 2)) %}",
+        "admission_day": "{% $number($substring($admission_date, 3, 2)) %}"
+      },
+      "Next": "Calculate Birthday Adjustment Pass"
+    },
+    "Calculate Birthday Adjustment Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "birthday_adjustment": "{% ($admission_month < $dob_month) or ($admission_month = $dob_month and $admission_day < $dob_day) ? 1 : 0 %}"
+      },
+      "Next": "Adjust Age Pass"
+    },
+    "Adjust Age Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "age": "{% $base_age - $birthday_adjustment %}"
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set New Data to Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "passed_data": "{% $merge([$passed_data, { \"AgeAtAdmission\": $age, \"DateOfBirth\": $DOB_response.Answer, \"AdmissionDate\": $admission_date_response.Answer, \"Gender\": $gender_response.Answer, \"PriorityTypeOfAdmission\": $priority_admission_response.Answer, \"DischargeDate\": $discharge_date_response.Answer, \"DischargeDate_Confidence\": $discharge_date_confidence_score, \"DischargeDate_PagesUsed\": $discharge_date_pages_used, \"DischargeStatus\": $discharge_status_response.Answer, \"AdmissionPointOfOrigin\": $origin_for_admission_response.Answer, \"PrincipalDxCode\": $principal_dx_response.Answer, \"OtherDxCodes\": $other_dx_discharge_response.Answer, \"DxPOA\": $dx_poa_response.Answer, \"PrincipalProcedureCode\": $principal_procedure_response.Answer, \"OtherProcedureCodes\": $other_procedure_response.Answer }]) %}"
+      },
+      "Next": "Collect and Upload"
+    },
+    "Collect and Upload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:collectAndUpload:$LATEST",
+        "Payload": {
+          "Date of Birth": "{% $DOB_response %}",
+          "Gender": "{% $gender_response %}",
+          "Race": "{% $race_response %}",
+          "Is the patient's ethnicity Hispanic or Latino": "{% $ethnicity_response %}",
+          "Unique Patient Identifier": "{% $patient_id_response %}",
+          "Hospital Federal Tax Identification Number": "{% $hospital_id_response %}",
+          "Admission Date": "{% $admission_date_response %}",
+          "Priority type of Admission": "{% $priority_admission_response %}",
+          "Discharge Date": "{% $discharge_date_response %}",
+          "discharge_date_confidence_score": "{% $discharge_date_confidence_score %}",
+          "discharge_date_pages_used": "{% $discharge_date_pages_used %}",
+          "Patient Discharge Status": "{% $discharge_status_response %}",
+          "Point of Origin for Admission": "{% $origin_for_admission_response %}",
+          "Type of Primary Payer": "{% $primary_payer_response %}",
+          "Attending Physician NPI": "{% $attending_npi_response %}",
+          "Operating Physician NPI": "{% $operating_npi_response %}",
+          "Specific Cohorts of Charts": "{% $cohort_charts_response %}",
+          "Principal Diagnosis": "{% $principal_dx_response %}",
+          "Other Diagnoses at Discharge": "{% $other_dx_discharge_response %}",
+          "POA": "{% $dx_poa_response %}",
+          "Principal Procedure": "{% $principal_procedure_response %}",
+          "Other Procedure": "{% $other_procedure_response %}",
+          "passed_data": "{% $passed_data %}",
+          "algorithm": "Administrative",
+          "page-embeddings-file": "{% $embeddings_key %}"
+        }
+      },
+      "End": true
+    }
+  }
+}

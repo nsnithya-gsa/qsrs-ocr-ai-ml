@@ -1,0 +1,1553 @@
+{
+  "StartAt": "Assign Vars",
+  "QueryLanguage": "JSONata",
+  "States": {
+    "Assign Vars": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:assignVarsStepFunction:$LATEST",
+        "Payload": "{% $states.input %}"
+      },
+      "Next": "Extract Data Pass",
+      "QueryLanguage": "JSONata",
+      "Assign": {
+        "prompts": "{% $states.result.Payload.prompts %}",
+        "embeddings_key": "{% $states.result.Payload.embeddings_key %}",
+        "all_page_text_file": "{% $states.result.Payload.all_page_text_file %}",
+        "passed_data": "{% $states.result.Payload.passed_data %}",
+        "algorithm": "{% $states.result.Payload.algorithm %}",
+        "config_questions_key": "surgeryAlgorithmQuestions",
+        "SURG_EVENT": "{% false %}",
+        "SURGERY_OCCURRENCE": "{% false %}",
+        "Emergent_Proc_Event": "{% false %}",
+        "EQ1_response": "",
+        "EQ2_response": "",
+        "Q1_response": "",
+        "Q2_response": "",
+        "Q3_response": "",
+        "Q3a_response": "",
+        "Q4_response": "",
+        "QOther4_response": "",
+        "Q5_response": "",
+        "QOther5_response": "",
+        "Q6_response": "",
+        "QOther6_response": "",
+        "Q7_response": "",
+        "Q8_response": "",
+        "Q9_response": "",
+        "QOther9_response": "",
+        "Q10_response": "",
+        "QOther10_response": "",
+        "Q11_response": "",
+        "QOther11_response": "",
+        "Q12_response": "",
+        "Q13_response": "",
+        "Q14_response": "",
+        "Q14a_response": "",
+        "Q14b_response": "",
+        "Q14c_response": "",
+        "Q15_response": ""
+      }
+    },
+    "Extract Data Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "Vent24": "{% $passed_data.Vent24 %}",
+        "OR_PROCEDURE": "{% $passed_data.OR_procedure %}",
+        "discharge_status": "{% $passed_data.DischargeStatus %}"
+      },
+      "Next": "EQ1"
+    },
+    "EQ1": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.EQ1 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "EQ1"
+        }
+      },
+      "Assign": {
+        "EQ1_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "EQ1 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "EQ1 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "EQR2 Choice",
+          "Condition": "{% $OR_PROCEDURE or $contains($EQ1_response.Answer, 'anesthesia') or $contains($EQ1_response.Answer, 'sedation') %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "EQR2 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "EQ2",
+          "Condition": "{% $OR_PROCEDURE %}"
+        }
+      ],
+      "Default": "Q1"
+    },
+    "EQ2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.EQ2 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "EQ2"
+        }
+      },
+      "Assign": {
+        "EQ2_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q1"
+        }
+      },
+      "Assign": {
+        "Q1_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q2",
+          "Condition": "{% $contains($Q1_response.Answer, 'anesthesia') %}"
+        }
+      ],
+      "Default": "Q3"
+    },
+    "Q2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q2 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q2"
+        }
+      },
+      "Assign": {
+        "Q2_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q3 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q3"
+        }
+      },
+      "Assign": {
+        "Q3_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3 choice A",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q3 choice A": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q4",
+          "Condition": "{% $contains($Q3_response.Answer, 'unplanned return to') %}"
+        }
+      ],
+      "Default": "Q3 choice B"
+    },
+    "Q3 choice B": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set SURG_EVENT = True (1)",
+          "Condition": "{% $contains($Q3_response.Answer, 'retained object not present on admission') %}"
+        }
+      ],
+      "Default": "Q3 choice C"
+    },
+    "Set SURG_EVENT = True (1)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Q5"
+    },
+    "Q5": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q5 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q5"
+        }
+      },
+      "Assign": {
+        "Q5_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q5 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q5 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "QOther5",
+          "Condition": "{% $contains($Q5_response.Answer, 'other') %}"
+        }
+      ],
+      "Default": "Q3 choice C"
+    },
+    "QOther5": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.QOther5 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "QOther5_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3 choice C",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q3 choice C": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set SURG_EVENT = True (2)",
+          "Condition": "{% $contains($Q3_response.Answer, 'incorrect operating room procedure') %}"
+        }
+      ],
+      "Default": "Q3 choice D"
+    },
+    "Set SURG_EVENT = True (2)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Q6"
+    },
+    "Q6": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q6 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q6"
+        }
+      },
+      "Assign": {
+        "Q6_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q6 Implant Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q6 Implant Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set SURG_EVENT = True (3)",
+          "Condition": "{% $contains($Q6_response.Answer, 'incorrect implant') %}"
+        }
+      ],
+      "Default": "Q6 Other Choice"
+    },
+    "Set SURG_EVENT = True (3)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Q7"
+    },
+    "Q7": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q7 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q7"
+        }
+      },
+      "Assign": {
+        "Q7_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q6 Other Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q6 Other Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "QOther6",
+          "Condition": "{% $contains($Q6_response.Answer, 'other') %}"
+        }
+      ],
+      "Default": "Q3 choice D"
+    },
+    "Q3 choice D": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set SURG_EVENT = True (4)",
+          "Condition": "{% $contains($Q3_response.Answer, 'unplanned removal of normal organ') %}"
+        }
+      ],
+      "Default": "Q8"
+    },
+    "Set SURG_EVENT = True (4)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Q3a"
+    },
+    "Q3a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q3a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q3a"
+        }
+      },
+      "Assign": {
+        "Q3a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q8",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q8": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q8 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q8"
+        }
+      },
+      "Assign": {
+        "Q8_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q8 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q8 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q9",
+          "Condition": "{% $Q8_response.Answer = 'none' or $Q8_response.Answer = \"can't tell\" %}"
+        }
+      ],
+      "Default": "Set SURG_EVENT = True (5)"
+    },
+    "Q9": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q9 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q9"
+        }
+      },
+      "Assign": {
+        "Q9_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q9 Other Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q9 Other Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "QOther9",
+          "Condition": "{% $contains($Q9_response.Answer, 'other') %}"
+        }
+      ],
+      "Default": "Q9 Event Choice"
+    },
+    "QOther9": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.QOther9 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "QOther9_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q9 Event Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q9 Event Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $Q9_response.Answer = \"can't tell\" or $Q9_response.Answer = 'none' %}",
+          "Next": "Q10"
+        }
+      ],
+      "Default": "Set SURG_EVENT = True (11)"
+    },
+    "Set SURG_EVENT = True (11)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Q10"
+    },
+    "Q10": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q10 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q10"
+        }
+      },
+      "Assign": {
+        "Q10_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q10 Other Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q10 Other Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q10 Other Pass",
+          "Condition": "{% $contains($Q10_response.Answer, 'other') %}"
+        }
+      ],
+      "Default": "Q10 Event Choice"
+    },
+    "Q10 Other Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "SURGERY_OCCURRENCE": "{% true %}"
+      },
+      "Next": "QOther10"
+    },
+    "QOther10": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.QOther10 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "QOther10_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q10 Event Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q10 Event Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q11",
+          "Condition": "{% $Q10_response.Answer = \"can't tell\" or $Q10_response.Answer = 'none' %}"
+        }
+      ],
+      "Default": "Set SURG_EVENT = True (6)"
+    },
+    "Q11": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q11 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q11"
+        }
+      },
+      "Assign": {
+        "Q11_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q11 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q11 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "R1 Choice",
+          "Condition": "{% $Q11_response.Answer = 'none' or $Q11_response.Answer = \"can't tell\" %}"
+        },
+        {
+          "Next": "QOther11",
+          "Condition": "{% $contains($Q11_response.Answer, 'other') %}"
+        }
+      ],
+      "Default": "Set SURG_EVENT = True (7)"
+    },
+    "QOther11": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.QOther11 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "QOther11_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "R1 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "R1 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q12",
+          "Condition": "{% $Vent24 %}"
+        }
+      ],
+      "Default": "R3 Choice"
+    },
+    "Q12": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q12 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q12_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q12 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q12 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q13",
+          "Condition": "{% $Q12_response.Answer = 'no' %}"
+        }
+      ],
+      "Default": "R3 Choice"
+    },
+    "Q13": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q13 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q13"
+        }
+      },
+      "Assign": {
+        "Q13_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q13 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q13 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "R3 Choice",
+          "Condition": "{% $Q13_response.Answer = 'none' or $Q13_response.Answer = \"can't tell\" %}"
+        }
+      ],
+      "Default": "Set SURG_EVENT = True (8)"
+    },
+    "Set SURG_EVENT = True (8)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "R3 Choice"
+    },
+    "R3 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q14",
+          "Condition": "{% $OR_PROCEDURE and $contains($EQ1_response.Answer, 'anesthesia') %}"
+        }
+      ],
+      "Default": "R4 Choice"
+    },
+    "Q14": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q14 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q14"
+        }
+      },
+      "Assign": {
+        "Q14_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q14 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q14 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "R6 Choice",
+          "Condition": "{% $Q14_response.Answer = 'class 1' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "R6 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q14b",
+          "Condition": "{% $discharge_status = 'died' and $contains($EQ2_response.Answer,'two') %}"
+        }
+      ],
+      "Default": "R7 Choice"
+    },
+    "Q14b": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q14b %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q14b"
+        }
+      },
+      "Assign": {
+        "Q14b_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q14b choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q14b choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q14a",
+          "Condition": "{% $Q14b_response.Answer = 'class 1' %}"
+        }
+      ],
+      "Default": "R4 Choice"
+    },
+    "Q14a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q14a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q14a"
+        }
+      },
+      "Assign": {
+        "Q14a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q14a choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q14a choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set SURG_EVENT = True (9)",
+          "Condition": "{% $contains($Q14a_response.Answer,'following the induction of anesthesia') or $contains($Q14b_response.Answer,'within 24 hours after leaving') %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Set SURG_EVENT = True (9)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "R7 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q14a",
+          "Condition": "{% $discharge_status = 'died' and $contains($EQ2_response.Answer, 'one') %}"
+        }
+      ],
+      "Default": "R8 Choice"
+    },
+    "R8 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q14c",
+          "Condition": "{% $discharge_status = 'died' and $contains($EQ2_response.Answer, 'three') %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q14c": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q14c %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q14c_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q14c choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q14c choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set SURG_EVENT = True (10)",
+          "Condition": "{% $Q14_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Set SURG_EVENT = True (10)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "R4 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q15",
+          "Condition": "{% $OR_PROCEDURE %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q15": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q15 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q15_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "L3 (check if SURG_EVENT = True)",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "L3 (check if SURG_EVENT = True)": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set Emergent_Proc_Event = True",
+          "Condition": "{% $SURG_EVENT = true %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Set Emergent_Proc_Event = True": {
+      "Type": "Pass",
+      "Assign": {
+        "Emergent_Proc_Event": true
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set SURG_EVENT = True (7)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "R1 Choice"
+    },
+    "Set SURG_EVENT = True (6)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Q11"
+    },
+    "Set SURG_EVENT = True (5)": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Q9"
+    },
+    "Q4": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q4 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q4"
+        }
+      },
+      "Assign": {
+        "Q4_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q4 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q4 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q4 Other Pass",
+          "Condition": "{% $contains($Q4_response.Answer, 'other') %}"
+        }
+      ],
+      "Default": "Set SURG_EVENT = True"
+    },
+    "Q4 Other Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "SURGERY_OCCURRENCE": "{% true %}"
+      },
+      "Next": "QOther4"
+    },
+    "QOther4": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.QOther4 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "QOther4_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3 choice B",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Set SURG_EVENT = True": {
+      "Type": "Pass",
+      "Assign": {
+        "SURG_EVENT": true
+      },
+      "Next": "Q3 choice B"
+    },
+    "Set New Data to Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "passed_data": "{% $merge([$passed_data, {\"SURG_EVENT\": $SURG_EVENT, \"SURGERY_OCCURRENCE\": $SURGERY_OCCURRENCE, \"Emergent_Proc_Event\": $Emergent_Proc_Event}]) %}"
+      },
+      "Next": "Collect and Upload"
+    },
+    "Collect and Upload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:collectAndUpload:$LATEST",
+        "Payload": {
+          "SURG_EVENT": "{% $SURG_EVENT %}",
+          "SURGERY_OCCURRENCE": "{% $SURGERY_OCCURRENCE %}",
+          "Emergent_Proc_Event": "{% $Emergent_Proc_Event %}",
+          "EQ1": "{% $EQ1_response %}",
+          "EQ2": "{% $EQ2_response %}",
+          "Q1": "{% $Q1_response %}",
+          "Q2": "{% $Q2_response %}",
+          "Q3": "{% $Q3_response %}",
+          "Q3a": "{% $Q3a_response %}",
+          "Q4": "{% $Q4_response %}",
+          "QOther4": "{% $QOther4_response %}",
+          "Q5": "{% $Q5_response %}",
+          "QOther5": "{% $QOther5_response %}",
+          "Q6": "{% $Q6_response %}",
+          "QOther6": "{% $QOther6_response %}",
+          "Q7": "{% $Q7_response %}",
+          "Q8": "{% $Q8_response %}",
+          "Q9": "{% $Q9_response %}",
+          "QOther9": "{% $QOther9_response %}",
+          "Q10": "{% $Q10_response %}",
+          "QOther10": "{% $QOther10_response %}",
+          "Q11": "{% $Q11_response %}",
+          "QOther11": "{% $QOther11_response %}",
+          "Q12": "{% $Q12_response %}",
+          "Q13": "{% $Q13_response %}",
+          "Q14": "{% $Q14_response %}",
+          "Q14a": "{% $Q14a_response %}",
+          "Q14b": "{% $Q14b_response %}",
+          "Q14c": "{% $Q14c_response %}",
+          "Q15": "{% $Q15_response %}",
+          "passed_data": "{% $passed_data %}",
+          "algorithm": "Surgery",
+          "page-embeddings-file": "{% $embeddings_key %}"
+        }
+      },
+      "End": true
+    },
+    "Fail State": {
+      "Type": "Fail",
+      "Error": "$['Error']",
+      "Cause": "$['Cause']"
+    },
+    "QOther6": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.QOther6 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "QOther6_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3 choice D",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    }
+  }
+}

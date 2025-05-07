@@ -1,0 +1,517 @@
+{
+  "StartAt": "Assign Vars",
+  "QueryLanguage": "JSONata",
+  "States": {
+    "Assign Vars": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:assignVarsStepFunction:$LATEST",
+        "Payload": "{% $states.input %}"
+      },
+      "Next": "Extract Data Pass",
+      "QueryLanguage": "JSONata",
+      "Assign": {
+        "prompts": "{% $states.result.Payload.prompts %}",
+        "embeddings_key": "{% $states.result.Payload.embeddings_key %}",
+        "all_page_text_file": "{% $states.result.Payload.all_page_text_file %}",
+        "passed_data": "{% $states.result.Payload.passed_data %}",
+        "algorithm": "{% $states.result.Payload.algorithm %}",
+        "config_questions_key": "bloodAlgorithmQuestions",
+        "BLOOD_OCCURRENCE": false,
+        "BLOOD_EVENT": false,
+        "BloodTransfusion_FFP": false,
+        "BloodTransfusion_Whole": false,
+        "BloodTransfusion_RBC": false,
+        "BloodTransfusion_Cryo": false,
+        "EQR1_response": "",
+        "EL1a_response": "",
+        "EL2_response": "",
+        "EQ1_response": "",
+        "Q1_response": "",
+        "QOther1_response": "",
+        "Q2_response": "",
+        "Q3_response": "",
+        "Q4_response": "",
+        "Q5_response": "",
+        "Q4a_response": ""
+      }
+    },
+    "Extract Data Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "all_transfusion_reaction_codes": "{% $passed_data.All_Transfusion_Reaction_Codes %}",
+        "other_dx_codes": "{% $passed_data.OtherDxCodes %}",
+        "poa_dx_codes": "{% $passed_data.DxPOA %}",
+        "discharge_status": "{% $passed_data.DischargeStatus %}"
+      },
+      "Next": "Other Dx Code String to Array Pass"
+    },
+    "Other Dx Code String to Array Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "array_other_dx_codes": "{% $split($other_dx_codes, /[ ,]+/) %}"
+      },
+      "Next": "EQR1 Pass"
+    },
+    "EQR1 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "has_no_matching_other_transfusion_codes": "{% $count($filter($array_other_dx_codes, function($s) { $contains($all_transfusion_reaction_codes, $s) })) = 0 %}"
+      },
+      "Next": "EQR1 Choice"
+    },
+    "EQR1 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "EQ1",
+          "Condition": "{% $has_no_matching_other_transfusion_codes %}"
+        }
+      ],
+      "Default": "POA Dx Code String to Array Pass"
+    },
+    "POA Dx Code String to Array Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "array_poa_dx_codes": "{% $split($poa_dx_codes, /[ ,]+/) %}"
+      },
+      "Next": "EL1a EL2 Pass"
+    },
+    "EL1a EL2 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "has_no_matching_poa_transfusion_codes": "{% $count($filter($array_poa_dx_codes, function($s) { $contains($all_transfusion_reaction_codes, $s) })) = 0 %}"
+      },
+      "Next": "EL1a EL2 Choice"
+    },
+    "EL1a EL2 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q1",
+          "Condition": "{% $has_no_matching_poa_transfusion_codes %}"
+        }
+      ],
+      "Default": "EQ1"
+    },
+    "EQ1": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.EQ1 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "EQ1_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "EQ1 choice"
+    },
+    "EQ1 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q1",
+          "Condition": "{% $EQ1_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q1": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q1 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q1"
+        }
+      },
+      "Assign": {
+        "Q1_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1 Choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "QOther1",
+          "Condition": "{% $contains($Q1_response.Answer, 'other') %}"
+        }
+      ],
+      "Default": "Q1 Pass"
+    },
+    "QOther1": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.QOther1 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "QOther1_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q1 Pass",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q1 Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "BloodTransfusion_FFP": "{% $contains($Q1_response.Answer, 'plasma') %}",
+        "BloodTransfusion_Whole": "{% $contains($Q1_response.Answer, 'whole blood') %}",
+        "BloodTransfusion_RBC": "{% $contains($Q1_response.Answer, 'red blood cells') %}",
+        "BloodTransfusion_Cryo": "{% $contains($Q1_response.Answer, 'cryoprecipitate') %}"
+      },
+      "Next": "Q2"
+    },
+    "Q2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q2 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q2_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q2 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q2 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set BLOOD_OCCURRENCE = true",
+          "Condition": "{% $Q2_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q3"
+    },
+    "Q3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q3 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}",
+          "config_questions_key": "{% $config_questions_key %}",
+          "qnum": "Q3"
+        }
+      },
+      "Assign": {
+        "Q3_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q3 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q3 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q4",
+          "Condition": "{% $Q3_response.Answer = 'neither' or $Q3_response.Answer = \"can't tell\" %}"
+        }
+      ],
+      "Default": "Set BLOOD_OCCURRENCE = true"
+    },
+    "Set BLOOD_OCCURRENCE = true": {
+      "Type": "Pass",
+      "Next": "Q4",
+      "Assign": {
+        "BLOOD_OCCURRENCE": "{% true %}"
+      }
+    },
+    "Q4": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q4 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q4_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q4 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q4 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set BLOOD_EVENT = true (from Q4)",
+          "Condition": "{% $Q4_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Q5"
+    },
+    "Set BLOOD_EVENT = true (from Q4)": {
+      "Type": "Pass",
+      "Assign": {
+        "BLOOD_EVENT": "{% true %}"
+      },
+      "Next": "R0 Choice"
+    },
+    "R0 Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Q4a",
+          "Condition": "{% $discharge_status = 'died' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Q4a": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q4a %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q4a_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Set New Data to Pass",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q5": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:answerQuestion:$LATEST",
+        "Payload": {
+          "prompt": "{% $prompts.Q5 %}",
+          "all_page_text_file": "{% $all_page_text_file %}",
+          "embeddings_key": "{% $embeddings_key %}"
+        }
+      },
+      "Assign": {
+        "Q5_response": "{% $parse($states.result.Payload) %}"
+      },
+      "Next": "Q5 choice",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 1,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "TimeoutSeconds": 120
+    },
+    "Q5 choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Set BLOOD_EVENT = true (from Q5)",
+          "Condition": "{% $Q5_response.Answer = 'yes' %}"
+        }
+      ],
+      "Default": "Set New Data to Pass"
+    },
+    "Set BLOOD_EVENT = true (from Q5)": {
+      "Type": "Pass",
+      "Assign": {
+        "BLOOD_EVENT": "{% true %}"
+      },
+      "Next": "Set New Data to Pass"
+    },
+    "Set New Data to Pass": {
+      "Type": "Pass",
+      "Assign": {
+        "passed_data": "{% $merge([$passed_data, { \"BloodTransfusion_FFP\": $BloodTransfusion_FFP, \"BloodTransfusion_Whole\": $BloodTransfusion_Whole, \"BloodTransfusion_RBC\": $BloodTransfusion_RBC, \"BloodTransfusion_Cryo\": $BloodTransfusion_Cryo, \"BLOOD_EVENT\": $BLOOD_EVENT }]) %}"
+      },
+      "Next": "Collect and Upload"
+    },
+    "Collect and Upload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "arn:aws:lambda:us-east-1:864981749938:function:collectAndUpload:$LATEST",
+        "Payload": {
+          "BLOOD_OCCURRENCE": "{% $BLOOD_OCCURRENCE %}",
+          "BLOOD_EVENT": "{% $BLOOD_EVENT %}",
+          "BloodTransfusion_FFP": "{% $BloodTransfusion_FFP %}",
+          "BloodTransfusion_Whole": "{% $BloodTransfusion_Whole %}",
+          "BloodTransfusion_RBC": "{% $BloodTransfusion_RBC %}",
+          "BloodTransfusion_Cryo": "{% $BloodTransfusion_Cryo %}",
+          "EQR1": "{% $EQR1_response %}",
+          "EL1a": "{% $EL1a_response %}",
+          "EL2": "{% $EL2_response %}",
+          "EQ1": "{% $EQ1_response %}",
+          "Q1": "{% $Q1_response %}",
+          "QOther1": "{% $QOther1_response %}",
+          "Q2": "{% $Q2_response %}",
+          "Q3": "{% $Q3_response %}",
+          "Q4": "{% $Q4_response %}",
+          "Q4a": "{% $Q4a_response %}",
+          "Q5": "{% $Q5_response %}",
+          "algorithm": "Blood",
+          "passed_data": "{% $passed_data %}",
+          "page-embeddings-file": "{% $embeddings_key %}"
+        }
+      },
+      "End": true
+    },
+    "Fail State": {
+      "Type": "Fail",
+      "Error": "$['Error']",
+      "Cause": "$['Cause']"
+    }
+  }
+}
