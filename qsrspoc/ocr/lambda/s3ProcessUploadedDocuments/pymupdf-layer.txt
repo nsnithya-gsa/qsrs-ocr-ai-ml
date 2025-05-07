@@ -1,0 +1,18 @@
+1. Create a virtual environment
+
+	mkdir pymupdf-layer && cd pymupdf-layer
+python3 -m venv venv
+source venv/bin/activate
+
+2. Install PyMuPDF in the correct format for AWS Lambda (Linux x86_64)
+	pip install --target python pymupdf
+
+
+3. Zip the dependencies
+zip -r pymupdf-layer.zip python
+
+4. Create a Lambda Layer using AWS CLI
+aws lambda publish-layer-version \
+    --layer-name pymupdf-layer \
+    --zip-file fileb://pymupdf-layer.zip \
+    --compatible-runtimes python3.8 python3.9 python3.10 python3.12 python3.13

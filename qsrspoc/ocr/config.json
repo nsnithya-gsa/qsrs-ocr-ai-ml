@@ -1,0 +1,57 @@
+{
+    "bucketname": "ahrq-qsrs-ml-poc",
+    "ocr-processing-landing": "landing/",
+
+    "bucketname-cms-droplocation": "ahrq-qsrs-ml-poc-pdf-drop-location ",
+    "ocr-cms-dl-landing": "qsrs-ocr-landing-zone/",
+    "ocr-cms-dl-archive": "qsrs-ocr-archive/",
+    "ocr-dms-dl-number-of-documents": "5",
+    "ocr-dms-dl-enable-existing-filecheck": "1",
+
+    "ocr_pdf_split_size": "10",
+    "ocr_pdf_preprocess_folder": "ocr-pdf-preprocess/",
+    "ocr_pdf_split_results_folder": "ocr-pdf-split-results/",
+    
+    "deletion_files_age_threshold_in_days": "60",	
+    "deletion_files_folder_paths": "ocr-results/,structured-data/", 	
+
+    "ocr_featuretypes":"[\"LAYOUT\"]",
+    "ocr_resultsfolder": "ocr-results/",
+    "ocr_results_suffix": "_ocrresults",
+    "ocr_processlog": "logs/process_log_",
+    "ocr_data_segmentation_folder": "data-segments/",
+    "ocr_structured_data_folder": "structured-data/",
+    "ocr_structured_data_suffix": "_structured",
+    "coversheet_text": "Clinical Data Abstraction Center Medical Record Coversheet",
+    
+    "logfile_name_dateformat": "%m%Y",
+    "logfile_status_start": "Started",
+    "logfile_status_message_start": "OCR process started",
+    "logfile_status_end": "Ended",
+    "logfile_status_message_end": "OCR process finished",
+
+    "archive_destinationfolder": "processed/",
+    "archive_newfilenamesuffix": "_processed",
+
+    "cleanpdfprefix": "clean",
+    "savecleanpdfs3": "true",
+
+    "structured-extension": "structured.txt",
+    "cleaned-extension": "cleaned.json",
+    "embeddings-extension": "embeddings.json",
+
+    "enable_convert_ocr_jsondata_structured": "1",
+    "enable_data_segmentation": "1",
+    "enable_convert_ocr_jsondata_simple": "0",
+    "send_to_batch": "1",
+
+    "batch_methodname": "process_textract_job",
+    "batch_jobname": "qsrs-ocr-awsbatch-job",
+    "batch_jobqueue": "qsrs-ocr-job-queue-awsbatch",
+    "batch_jobdefinition": "qsrs-ocr-job-awsbatch",
+    "batch_language": "python",
+    "batch_pythoncodefile": "awsbatch_job.py"
+
+   
+}
+ 
